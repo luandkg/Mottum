@@ -8,315 +8,443 @@ import java.util.ArrayList;
 public class AssetContainer {
 
 
-	private ArrayList<Pasta> mPastas;
-	private ArrayList<Arquivo> mArquivos;
-	
-	private String mCabecalho;
-	private String mVersao;
-	private String mCriado;
-	private String mFinalizado;
+    private ArrayList<Pasta> mPastas;
+    private ArrayList<Arquivo> mArquivos;
 
-	private String mArquivo;
-	private boolean mAberto;
+    private String mCabecalho;
+    private String mVersao;
+    private String mCriado;
+    private String mFinalizado;
+    private byte mApendice;
+    private long mApendicePonteiro;
 
-	public AssetContainer() {
-		
-		mPastas = new ArrayList<Pasta>();
-		mArquivos = new ArrayList<Arquivo>();
-		
-		mCabecalho = "";
-		mVersao="";
-		mCriado = "";
-		mFinalizado = "";
+    private String mArquivo;
+    private boolean mAberto;
+    private AssetExtrum mAssetExtrum;
 
-		mAberto=false;
-	}
+    public AssetContainer() {
 
-	public String getCabecalho() {
-		return mCabecalho;
-	}
-	
-	public String getVersao() {
-		return mVersao;
-	}
-	
-	public String getCriado() {
-		return mCriado;
-	}
-	
-	public String getFinalizado() {
-		return mFinalizado;
-	}
+        mPastas = new ArrayList<Pasta>();
+        mArquivos = new ArrayList<Arquivo>();
 
-	public String getArquivo() {
-		return mArquivo;
-	}
-	public boolean isAberto() {
-		return mAberto;
-	}
+        mCabecalho = "";
+        mVersao = "";
+        mCriado = "";
+        mFinalizado = "";
+        mApendice = (byte) 0;
+        mApendicePonteiro = 0;
 
-	public long getTamanho() {
-		File mFile = new File(mArquivo);
-		return mFile.length();
-	}
-	
-	public void abrir(String eArquivo) {
+        mAberto = false;
 
-		mPastas = new ArrayList<Pasta>();
-		mCabecalho = "";
-		mArquivo=eArquivo;
-		
-		
-		try {
+        mAssetExtrum = new AssetExtrum(this);
+    }
 
-			RandomAccessFile raf = new RandomAccessFile(new File(eArquivo), "rw");
+    public String getCabecalho() {
+        return mCabecalho;
+    }
 
-			FileBinary fu = new FileBinary(raf);
+    public String getVersao() {
+        return mVersao;
+    }
 
-			fu.inicio();
+    public String getCriado() {
+        return mCriado;
+    }
 
-			mCabecalho = fu.readString();
-			mVersao = fu.readString();
-			mCriado = fu.readString();
-			mFinalizado = fu.readString();
+    public String getFinalizado() {
+        return mFinalizado;
+    }
 
-			int v = 0;
+    public String getArquivo() {
+        return mArquivo;
+    }
 
-			while (v != 13) {
-				v = (int) fu.readByte();
+    public boolean isAberto() {
+        return mAberto;
+    }
 
-				if (v == 11) {
+    public long getTamanho() {
+        File mFile = new File(mArquivo);
+        return mFile.length();
+    }
 
-					String s1 = fu.readString();
-					long l2 = fu.readLong();
-					long l3 = fu.readLong();
+    public void abrir(String eArquivo) {
 
-					mPastas.add(new Pasta(this, new Ponto(s1, 11, l2, l3)));
-
-				} else if (v == 12) {
-
-					String s1 = fu.readString();
-					long l2 = fu.readLong();
-					long l3 = fu.readLong();
-
-					mArquivos.add(new Arquivo(this, new Ponto(s1, 12, l2, l3)));
-
-				}
-			}
+        mPastas = new ArrayList<Pasta>();
+        mCabecalho = "";
+        mArquivo = eArquivo;
 
 
-			raf.close();
+        try {
 
-		} catch (IOException e) {
+            RandomAccessFile raf = new RandomAccessFile(new File(eArquivo), "rw");
 
-			e.printStackTrace();
-		}
-		
-		mAberto=true;
-	}
+            FileBinary fu = new FileBinary(raf);
 
-	public void listarDebug(String elocalExportar) {
+            fu.inicio();
 
-		System.out.println("Cabecalho : " + mCabecalho);
+            mCabecalho = fu.readString();
+            mVersao = fu.readString();
+            mCriado = fu.readString();
+            mFinalizado = fu.readString();
 
-		
-		listarDebugCom(0,elocalExportar, this.getArquivos(), this.getPastas());
-	}
-	
-	
-	public int getArquivosContagem() {
-		int i = 0;
-		
-		i+=this.getArquivos().size();
-		
-		for (Pasta mPasta : this.getPastas()) {
-			i+=getArquivosContagemInterno(mPasta);
-		}
-		
-		return i;
-	}
+            mApendice = fu.readByte();
+            mApendicePonteiro = fu.readLong();
 
-	
-	public int getArquivosContagemInterno(Pasta ePasta) {
-		int i = 0;
-		
-		i+=ePasta.getArquivos().size();
-		
-		for (Pasta mPasta : ePasta.getPastas()) {
-			i+=getArquivosContagemInterno(mPasta);
-		}
-		
-		return i;
-	}
-	
-	
-	public int getPastasContagem() {
-		int i = 0;
-		
-		i+=this.getPastas().size();
-		
-		for (Pasta mPasta : this.getPastas()) {
-			i+=mPasta.getPastasContagemInterno(mPasta);
-		}
-		
-		return i;
-	}
+            int v = 0;
+
+            while (v != 13) {
+                v = (int) fu.readByte();
+
+                if (v == 11) {
+
+                    String s1 = fu.readString();
+                    long l2 = fu.readLong();
+                    long l3 = fu.readLong();
+
+                    mPastas.add(new Pasta(this, new Ponto(s1, 11, l2, l3)));
+
+                } else if (v == 12) {
+
+                    String s1 = fu.readString();
+                    long l2 = fu.readLong();
+                    long l3 = fu.readLong();
+
+                    mArquivos.add(new Arquivo(this, new Ponto(s1, 12, l2, l3)));
+
+                }
+            }
 
 
-	
-	
-	public int getContagem() {
-		int i = 0;
-		
-		i+=getArquivos().size();
-		i+=this.getPastas().size();
-		
-		for (Pasta mPasta : this.getPastas()) {
-			i+=mPasta.getContagem();
-		}
-		
-		return i;
-	}
-	
+            raf.close();
 
-	
-	
-	public void listarDebugCom(int t,String eAnterior, ArrayList<Arquivo> mDebugArquivos, ArrayList<Pasta> mDebugPastas) {
+        } catch (IOException e) {
 
-		String mTab = "";
-		if (t > 0) {
-			for (int i = 0; i < t; i++) {
-				mTab += "\t";
-			}
-		}
+            e.printStackTrace();
+        }
 
-		for (Pasta mPasta : mDebugPastas) {
+        mAberto = true;
+    }
 
-			System.out.println(mTab + "DIR = " + mPasta.getNome());
-			System.out.println(mTab + "\tI = " + mPasta.getInicio());
-			System.out.println(mTab + "\tF = " + mPasta.getFim());
+    public void listarDebug(String elocalExportar) {
 
-			listarDebugCom(t + 1,eAnterior + mPasta.getNome() +".", mPasta.getArquivos(), mPasta.getPastas());
-
-		}
-
-		for (Arquivo subArquivo : mDebugArquivos) {
-
-			System.out.println(mTab + "tARQ = " + subArquivo.getNome());
-			System.out.println(mTab + "\tI = " + subArquivo.getInicio());
-			System.out.println(mTab + "\tF = " + subArquivo.getFim());
-			System.out.println(mTab + "\tTamanho = " + subArquivo.getTamanho());
-			
-			
-		subArquivo.exportar(eAnterior  + subArquivo.getNome());
-			
-		}
-
-	}
-	
-	public void listarTabelaDeArquivos() {
-
-		System.out.println("Cabecalho : " + mCabecalho);
-	
-		listarTabelaDeArquivosInterno("", this.getArquivos(), this.getPastas());
-	}
-	
-	public void listarTabelaDeArquivosInterno(String eAntes, ArrayList<Arquivo> mDebugArquivos, ArrayList<Pasta> mDebugPastas) {
+        System.out.println("Cabecalho : " + mCabecalho);
 
 
-
-		for (Pasta mPasta : mDebugPastas) {
-
-	
-			listarTabelaDeArquivosInterno(eAntes + mPasta.getNome() + "/", mPasta.getArquivos(), mPasta.getPastas());
-
-		}
-
-		for (Arquivo subArquivo : mDebugArquivos) {
+        listarDebugCom(0, elocalExportar, this.getArquivos(), this.getPastas());
+    }
 
 
-			
-			
-		System.out.println(" -->> " + " [ " +subArquivo.getInicio() + " " + subArquivo.getFim() + " ] :: " + eAntes + subArquivo.getNome()  );
-			
-		}
+    public int getArquivosContagem() {
+        int i = 0;
 
-	}
-	
+        i += this.getArquivos().size();
 
-	public ArrayList<Arquivo> getArquivos() {
+        for (Pasta mPasta : this.getPastas()) {
+            i += getArquivosContagemInterno(mPasta);
+        }
 
-	
+        return i;
+    }
 
-		return mArquivos;
 
-	}
+    public int getArquivosContagemInterno(Pasta ePasta) {
+        int i = 0;
 
-	public ArrayList<Pasta> getPastas() {
+        i += ePasta.getArquivos().size();
 
-	
-		return mPastas;
+        for (Pasta mPasta : ePasta.getPastas()) {
+            i += getArquivosContagemInterno(mPasta);
+        }
 
-	}
+        return i;
+    }
 
-	
-	public boolean existePasta(String eNome) {
-		
-		boolean ret = false;
-		
-		for (Pasta mPasta : getPastas()) {
-			if (mPasta.getNome().contentEquals(eNome)) {
-				ret=true;
-				break;
-			}
-		}
-		return ret;
-	}
-	
-	public boolean existeArquivo(String eNome) {
-		
-		boolean ret = false;
-		
-		for (Arquivo mArquivo : getArquivos()) {
-			if (mArquivo.getNome().contentEquals(eNome)) {
-				ret=true;
-				break;
-			}
-		}
-		return ret;
-	}
-	
-	
-	public Pasta getPasta(String eNome) {
-		
-		Pasta ret = null;
-		
-		for (Pasta mPasta : getPastas()) {
-			if (mPasta.getNome().contentEquals(eNome)) {
-				ret=mPasta;
-				break;
-			}
-		}
-		return ret;
-	}
-	
-	public Arquivo getArquivo(String eNome) {
-		
-		Arquivo ret = null;
-		
-		for (Arquivo mArquivo : getArquivos()) {
-			if (mArquivo.getNome().contentEquals(eNome)) {
-				ret=mArquivo;
-				break;
-			}
-		}
-		return ret;
-	}
-	
-	public ArquivoImagem getArquivoImagem(String eNome) {
-		return new ArquivoImagem(getArquivo(eNome));
-	}
-	
 
-	
+    public int getPastasContagem() {
+        int i = 0;
+
+        i += this.getPastas().size();
+
+        for (Pasta mPasta : this.getPastas()) {
+            i += mPasta.getPastasContagemInterno(mPasta);
+        }
+
+        return i;
+    }
+
+
+    public int getContagem() {
+        int i = 0;
+
+        i += getArquivos().size();
+        i += this.getPastas().size();
+
+        for (Pasta mPasta : this.getPastas()) {
+            i += mPasta.getContagem();
+        }
+
+        return i;
+    }
+
+
+    public void listarDebugCom(int t, String eAnterior, ArrayList<Arquivo> mDebugArquivos, ArrayList<Pasta> mDebugPastas) {
+
+        String mTab = "";
+        if (t > 0) {
+            for (int i = 0; i < t; i++) {
+                mTab += "\t";
+            }
+        }
+
+        for (Pasta mPasta : mDebugPastas) {
+
+            System.out.println(mTab + "DIR = " + mPasta.getNome());
+            System.out.println(mTab + "\tI = " + mPasta.getInicio());
+            System.out.println(mTab + "\tF = " + mPasta.getFim());
+
+            listarDebugCom(t + 1, eAnterior + mPasta.getNome() + ".", mPasta.getArquivos(), mPasta.getPastas());
+
+        }
+
+        for (Arquivo subArquivo : mDebugArquivos) {
+
+            System.out.println(mTab + "tARQ = " + subArquivo.getNome());
+            System.out.println(mTab + "\tI = " + subArquivo.getInicio());
+            System.out.println(mTab + "\tF = " + subArquivo.getFim());
+            System.out.println(mTab + "\tTamanho = " + subArquivo.getTamanho());
+
+
+            subArquivo.exportar(eAnterior + subArquivo.getNome());
+
+        }
+
+    }
+
+    public void listarTabelaDeArquivos() {
+
+
+        listarTabelaDeArquivosInterno("", this.getArquivos(), this.getPastas());
+    }
+
+    public void listarTabelaDeArquivosInterno(String eAntes, ArrayList<Arquivo> mDebugArquivos, ArrayList<Pasta> mDebugPastas) {
+
+
+        for (Pasta mPasta : mDebugPastas) {
+
+
+            listarTabelaDeArquivosInterno(eAntes + mPasta.getNome() + "/", mPasta.getArquivos(), mPasta.getPastas());
+
+        }
+
+        for (Arquivo subArquivo : mDebugArquivos) {
+
+
+            System.out.println(" -->> " + " [ " + subArquivo.getInicio() + " " + subArquivo.getFim() + " ] :: " + eAntes + subArquivo.getNome());
+
+        }
+
+    }
+
+    public void listarTabelaDePastas() {
+
+
+        listarTabelaDePastasInterno("", this.getArquivos(), this.getPastas());
+
+        for (Pasta mPasta : getTabelaDePastas()) {
+
+            System.out.println(" -->> " + " [ " + mPasta.getInicio() + " " + mPasta.getFim() + " ] :: " + mPasta.getNome());
+
+
+        }
+
+    }
+
+    public void listarTabelaDePastasInterno(String eAntes, ArrayList<Arquivo> mDebugArquivos, ArrayList<Pasta> mDebugPastas) {
+
+
+        for (Pasta mPasta : mDebugPastas) {
+
+
+            listarTabelaDePastasInterno(eAntes + mPasta.getNome() + "/", mPasta.getArquivos(), mPasta.getPastas());
+
+        }
+
+
+    }
+
+    public ArrayList<Pasta> getTabelaDePastas() {
+
+        ArrayList<Pasta> mTabelaDePastas = new ArrayList<Pasta>();
+
+        getTabelaDePastas("", mTabelaDePastas, this.getPastas());
+
+        return mTabelaDePastas;
+    }
+
+    public void getTabelaDePastas(String eAntes, ArrayList<Pasta> mTabelaDePastas, ArrayList<Pasta> mDebugPastas) {
+
+
+        for (Pasta mPasta : mDebugPastas) {
+
+            Ponto p = new Ponto(eAntes + mPasta.getNome(), 11, mPasta.getInicio(), mPasta.getFim());
+
+            mTabelaDePastas.add(new Pasta(this, p));
+
+            getTabelaDePastas(eAntes + mPasta.getNome() + "/", mTabelaDePastas, mPasta.getPastas());
+
+        }
+
+
+    }
+
+    public Pasta getPastaCaminho(String eLocal) {
+
+        for (Pasta mPasta : getTabelaDePastas()) {
+            if (mPasta.getNome().contentEquals(eLocal)) {
+                return mPasta;
+            }
+        }
+
+        eLocal = eLocal.replace("\\", "/");
+
+        for (Pasta mPasta : getTabelaDePastas()) {
+            if (mPasta.getNome().contentEquals(eLocal)) {
+                return mPasta;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean existePastaCaminho(String eLocal) {
+
+        for (Pasta mPasta : getTabelaDePastas()) {
+            if (mPasta.getNome().contentEquals(eLocal)) {
+                return true;
+            }
+        }
+
+        eLocal = eLocal.replace("\\", "/");
+
+        for (Pasta mPasta : getTabelaDePastas()) {
+            if (mPasta.getNome().contentEquals(eLocal)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public ArrayList<Arquivo> getArquivos() {
+        return mArquivos;
+    }
+
+    public ArrayList<Pasta> getPastas() {
+
+
+        return mPastas;
+
+    }
+
+
+    public boolean existePasta(String eNome) {
+
+        boolean ret = false;
+
+        for (Pasta mPasta : getPastas()) {
+            if (mPasta.getNome().contentEquals(eNome)) {
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    public boolean existeArquivo(String eNome) {
+
+        boolean ret = false;
+
+        for (Arquivo mArquivo : getArquivos()) {
+            if (mArquivo.getNome().contentEquals(eNome)) {
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    }
+
+
+    public Pasta getPasta(String eNome) {
+
+        Pasta ret = null;
+
+        for (Pasta mPasta : getPastas()) {
+            if (mPasta.getNome().contentEquals(eNome)) {
+                ret = mPasta;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    public Arquivo getArquivo(String eNome) {
+
+        Arquivo ret = null;
+
+        for (Arquivo mArquivo : getArquivos()) {
+            if (mArquivo.getNome().contentEquals(eNome)) {
+                ret = mArquivo;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    public ArquivoImagem getArquivoImagem(String eNome) {
+        return new ArquivoImagem(getArquivo(eNome));
+    }
+
+
+    public ArquivoTexto getArquivoTexto(String eNome) {
+        return new ArquivoTexto(getArquivo(eNome));
+    }
+
+    public boolean temApendice() {
+
+        if (mApendice == (byte) 1) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    public long getApendiceLocal() {
+        return mApendicePonteiro;
+    }
+
+    public Listador criarListador(String eNome) {
+     return   mAssetExtrum.criarListador(eNome);
+    }
+    public Biblioteca criarBiblioteca(String eNome) {
+        return mAssetExtrum.criarBiblioteca(eNome);
+    }
+
+    public ArrayList<Listador> getListadores() {
+        return mAssetExtrum.getListadores();
+    }
+
+    public ArrayList<Biblioteca> getBibliotecas() {
+        return mAssetExtrum.getBibliotecas();
+    }
+
+    public void salvarExtrum(){
+        mAssetExtrum.salvar();
+    }
+
+    public void limparExtrum(){
+        mAssetExtrum.limpar();
+    }
+
 }

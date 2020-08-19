@@ -10,22 +10,22 @@ import javax.imageio.ImageIO;
 public class ArquivoImagem {
 
 	private Arquivo mArquivo;
-	private boolean mObtido;
+	private boolean mIndexado;
 	private BufferedImage mImagem;
 
 	public ArquivoImagem(Arquivo eArquivo) {
 		mArquivo = eArquivo;
-		mObtido = false;
+		mIndexado = false;
 		mImagem = null;
 	}
 
 	public BufferedImage getImagem() {
 
-		if (!mObtido) {
+		if (!mIndexado) {
 			try {
 				InputStream in = new ByteArrayInputStream(mArquivo.getBytes());
 				mImagem = ImageIO.read(in);
-				mObtido = true;
+				mIndexado = true;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -51,5 +51,14 @@ public class ArquivoImagem {
 	}
 
 	public long getTamanho() {return mArquivo.getTamanho();}
-	
+
+	public boolean getIndexado(){return mIndexado;}
+
+	public int getLargura() {
+		return getImagem().getWidth();
+	}
+
+	public int getAltura() {
+		return getImagem().getHeight();
+	}
 }

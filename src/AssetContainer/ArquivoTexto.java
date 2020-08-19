@@ -7,7 +7,7 @@ public class ArquivoTexto {
 
 	private Arquivo mArquivo;
 	
-	private boolean mObtido;
+	private boolean mIndexado;
 	private String mConteudo;
 
 	private boolean mParseado;
@@ -18,8 +18,8 @@ public class ArquivoTexto {
 	
 	public ArquivoTexto(Arquivo eArquivo) {
 		mArquivo=eArquivo;
-		
-		mObtido=false;
+
+		mIndexado=false;
 		mConteudo=null;
 		
 		mContado=false;
@@ -31,9 +31,9 @@ public class ArquivoTexto {
 	
 	public String getConteudo() {	
 		
-		if (!mObtido) {
+		if (!mIndexado) {
 			mConteudo=new String(mArquivo.getBytes(), Charset.forName("UTF-8"));
-			mObtido=true;
+			mIndexado=true;
 		}
 		
 		return mConteudo;
@@ -97,5 +97,8 @@ public class ArquivoTexto {
 	}
 
 	public long getTamanho() {return mArquivo.getTamanho();}
-	
+
+	public boolean getIndexado(){return mIndexado;}
+
+
 }

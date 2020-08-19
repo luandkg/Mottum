@@ -91,6 +91,31 @@ public class FileBinary {
 		return result;
 	}
 
+
+	public byte[] stringGrandeToBytes(String s) {
+		byte[] result = new byte[1024];
+
+		int tamanho = s.length();
+
+		if (tamanho > 1024) {
+			throw new IllegalArgumentException("String alem do limite : " + tamanho);
+		} else {
+
+			int procurando = 0;
+
+			while (procurando < tamanho) {
+
+				byte v = getString(String.valueOf(s.charAt(procurando)));
+				result[procurando] = v;
+
+				procurando += 1;
+			}
+
+		}
+
+		return result;
+	}
+
 	public byte[] longToBytes(long l) {
 		byte[] result = new byte[8];
 		for (int i = 7; i >= 0; i--) {
@@ -200,6 +225,16 @@ public class FileBinary {
 
 	}
 
+	public void writeGrandeString(String s) {
+
+		try {
+			mFile.write(stringGrandeToBytes(s));
+		} catch (IOException e) {
+
+		}
+
+	}
+
 	public long getLength() {
 		try {
 			return mFile.length();
@@ -243,6 +278,54 @@ public class FileBinary {
 
 		int eIndex = 0;
 		while (eIndex < 100) {
+			byte i = result[eIndex];
+			// System.out.println("Passando : " + i);
+			if (i == 0) {
+				break;
+			} else {
+				ret += stringFromByte(i);
+			}
+			eIndex += 1;
+		}
+
+		return ret;
+	}
+
+	public String readStringGrande() {
+
+		String ret = "";
+		byte[] result = new byte[1024];
+
+		try {
+
+			long tamanho = mFile.length();
+			long index = mFile.getFilePointer();
+
+			int cur = 0;
+			int max = 1024;
+
+			while (index < tamanho) {
+
+				if (cur < max) {
+
+					result[cur] = mFile.readByte();
+
+				} else {
+					break;
+				}
+
+				// System.out.println("Cur : " + cur + " -->> " + result[cur]);
+
+				index += 1;
+				cur += 1;
+
+			}
+		} catch (IOException e) {
+
+		}
+
+		int eIndex = 0;
+		while (eIndex < 1024) {
 			byte i = result[eIndex];
 			// System.out.println("Passando : " + i);
 			if (i == 0) {

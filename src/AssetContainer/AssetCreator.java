@@ -10,359 +10,376 @@ import java.util.zip.GZIPOutputStream;
 
 public class AssetCreator {
 
-	public static final String ASSET_CONTAINER = "ASSET_CONTAINER";
-	public static final String ASSET_CONTAINER_COMPRESSED = "ASSET_CONTAINER_COMPRESSED";
+    public static final String ASSET_CONTAINER = "ASSET_CONTAINER";
+    public static final String ASSET_CONTAINER_COMPRESSED = "ASSET_CONTAINER_COMPRESSED";
 
-	public void criar(String eArquivo, String eLocal) {
-	
-		criarGeral(eArquivo,eLocal,ASSET_CONTAINER);
+    public void criar(String eArquivo, String eLocal) {
 
-	}
+        criarGeral(eArquivo, eLocal, ASSET_CONTAINER);
 
-	
-	public void criarCompressed(String eArquivo, String eLocal) {
+    }
 
-		criarGeral(eArquivo,eLocal,ASSET_CONTAINER_COMPRESSED);
-		
-	}
 
-	
-	
-	private void criarGeral(String eArquivo, String eLocal,String eCabecalho) {
-		
-		String eVersao = "1.0";
-		
-		try {
+    public void criarCompressed(String eArquivo, String eLocal) {
 
-			RandomAccessFile raf = new RandomAccessFile(new File(eArquivo), "rw");
+        criarGeral(eArquivo, eLocal, ASSET_CONTAINER_COMPRESSED);
 
-			FileBinary fu = new FileBinary(raf);
+    }
 
-			fu.limpar();
 
-			fu.inicio();
+    private void criarGeral(String eArquivo, String eLocal, String eCabecalho) {
 
-			fu.writeString(eCabecalho);
-			
-			fu.writeString(eVersao);
-			
-				long eCriado = fu.getPonteiro();
-				fu.writeString(getTempo());
+        String eVersao = "1.0";
 
-				long eFinalizado = fu.getPonteiro();
-				fu.writeString(getTempo());
-				
-			if (eCabecalho.contentEquals(ASSET_CONTAINER)) {
-				
-				criarPasta(fu, eLocal);
+        try {
 
-			} else 	if (eCabecalho.contentEquals(ASSET_CONTAINER_COMPRESSED)) {
-				criarPastaCompressed(fu, eLocal);
-	
-			}
-			
+            RandomAccessFile raf = new RandomAccessFile(new File(eArquivo), "rw");
 
-			//fu.dump();
+            FileBinary fu = new FileBinary(raf);
 
-			raf.seek(eFinalizado);
-			fu.writeString(getTempo());
+            fu.limpar();
 
-			
-			raf.close();
+            fu.inicio();
 
-		} catch (IOException e) {
+            fu.writeString(eCabecalho);
 
-			e.printStackTrace();
-		}
-		
-	}
-	
-	
-	
-	public void criarPasta(FileBinary fu, String eLocal) {
+            fu.writeString(eVersao);
 
+            long eCriado = fu.getPonteiro();
+            fu.writeString(getTempo());
 
-		File dir = new File(eLocal);
+            long eFinalizado = fu.getPonteiro();
+            fu.writeString(getTempo());
 
-		ArrayList<Ponto> mPontos = new ArrayList<Ponto>();
+            long eApendiceTem = fu.getPonteiro();
 
-		if (dir.exists()) {
-			for (File eDir : dir.listFiles()) {
+            fu.writeByte((byte) 0);
 
-				if (eDir.isDirectory()) {
+            long eApendicePonteiro = fu.getPonteiro();
 
-					fu.writeLong(11);
-					fu.writeString(eDir.getName());
+            fu.writeLong(0);
 
-					long eInicio = fu.getPonteiro();
+            if (eCabecalho.contentEquals(ASSET_CONTAINER)) {
 
-					fu.writeLong(0);
+                criarPasta(fu, eLocal);
 
-					long eFim = fu.getPonteiro();
+            } else if (eCabecalho.contentEquals(ASSET_CONTAINER_COMPRESSED)) {
 
-					fu.writeLong(0);
+                criarPastaCompressed(fu, eLocal);
 
-					mPontos.add(new Ponto(eDir.getAbsolutePath(), 11, eInicio, eFim));
+            }
 
-				} else if (eDir.isFile()) {
 
-					fu.writeLong(12);
-					fu.writeString(eDir.getName());
+            //fu.dump();
 
-					long eInicio = fu.getPonteiro();
+            long eApendiceInicio = fu.getPonteiro();
 
-					fu.writeLong(0);
+            fu.writeByte((byte) 50);
 
-					long eFim = fu.getPonteiro();
+            fu.writeByte((byte) 55);
 
-					fu.writeLong(0);
 
-					mPontos.add(new Ponto(eDir.getAbsolutePath(), 12, eInicio, eFim));
+            raf.seek(eApendiceTem);
+            fu.writeByte((byte) 1);
 
-				}
+            raf.seek(eApendicePonteiro);
+            raf.writeLong(eApendiceInicio);
 
-				// System.out.println(" ->> " + eDir.getName() + " :: "+ eDir.isDirectory());
-			}
-		}
+            raf.seek(eFinalizado);
+            fu.writeString(getTempo());
 
-		fu.writeLong(13);
 
-		//System.out.println(" ALOCANDO : " + eLocal);
+            raf.close();
 
-		long ePonteiroLocal = fu.getPonteiro();
+        } catch (IOException e) {
 
-		for (Ponto PontoC : mPontos) {
+            e.printStackTrace();
+        }
 
-			System.out.println("\t -->> " + PontoC.getTipo() + " : " + PontoC.getNome().replace(eLocal+"\\", ""));
+    }
 
-			fu.setPonteiro(ePonteiroLocal);
 
-			if (PontoC.getTipo() == 11) {
+    public void criarPasta(FileBinary fu, String eLocal) {
 
-				long ePastaPonteiro_Inicio = fu.getPonteiro();
 
-				criarPasta(fu, PontoC.getNome());
+        File dir = new File(eLocal);
 
-				long ePastaPonteiro_Fim = fu.getPonteiro();
+        ArrayList<Ponto> mPontos = new ArrayList<Ponto>();
 
-				ePonteiroLocal = fu.getPonteiro();
+        if (dir.exists()) {
+            for (File eDir : dir.listFiles()) {
 
-				fu.setPonteiro(PontoC.getInicio());
-				fu.writeLong(ePastaPonteiro_Inicio);
+                if (eDir.isDirectory()) {
 
-				fu.setPonteiro(PontoC.getFim());
-				fu.writeLong(ePastaPonteiro_Fim);
+                    fu.writeLong(11);
+                    fu.writeString(eDir.getName());
 
-			} else if (PontoC.getTipo() == 12) {
+                    long eInicio = fu.getPonteiro();
 
-				long eAquivoPonteiro_Inicio = fu.getPonteiro();
-				
-				
-				try {
+                    fu.writeLong(0);
 
-					RandomAccessFile mArquivando = new RandomAccessFile(new File(PontoC.getNome()), "r");
+                    long eFim = fu.getPonteiro();
 
-					long mAquivandoIndex = 0;
-					long mAquivandoTamanho = mArquivando.length();
-					
-					mArquivando.seek(0);
-				
-					while(mAquivandoIndex<mAquivandoTamanho) {
-						
-						fu.writeByte(mArquivando.readByte());
-						
-						mAquivandoIndex+=1;
-					}
-					
-					mArquivando.close();
+                    fu.writeLong(0);
 
-				} catch (IOException e) {
+                    mPontos.add(new Ponto(eDir.getAbsolutePath(), 11, eInicio, eFim));
 
-					e.printStackTrace();
-				}
-				
-				
-				long eAquivoPonteiro_Fim = fu.getPonteiro();
+                } else if (eDir.isFile()) {
 
-				ePonteiroLocal = fu.getPonteiro();
+                    fu.writeLong(12);
+                    fu.writeString(eDir.getName());
 
-				fu.setPonteiro(PontoC.getInicio());
-				fu.writeLong(eAquivoPonteiro_Inicio);
+                    long eInicio = fu.getPonteiro();
 
-				fu.setPonteiro(PontoC.getFim());
-				fu.writeLong(eAquivoPonteiro_Fim);
+                    fu.writeLong(0);
 
-			}
+                    long eFim = fu.getPonteiro();
 
-			fu.setPonteiro(ePonteiroLocal);
+                    fu.writeLong(0);
 
-		}
+                    mPontos.add(new Ponto(eDir.getAbsolutePath(), 12, eInicio, eFim));
 
-	}
+                }
 
+                // System.out.println(" ->> " + eDir.getName() + " :: "+ eDir.isDirectory());
+            }
+        }
 
-	public void criarPastaCompressed(FileBinary fu, String eLocal) {
+        fu.writeLong(13);
 
+        //System.out.println(" ALOCANDO : " + eLocal);
 
-		File dir = new File(eLocal);
+        long ePonteiroLocal = fu.getPonteiro();
 
-		ArrayList<Ponto> mPontos = new ArrayList<Ponto>();
+        for (Ponto PontoC : mPontos) {
 
-		if (dir.exists()) {
-			for (File eDir : dir.listFiles()) {
+            System.out.println("\t -->> " + PontoC.getTipo() + " : " + PontoC.getNome().replace(eLocal + "\\", ""));
 
-				if (eDir.isDirectory()) {
+            fu.setPonteiro(ePonteiroLocal);
 
-					fu.writeLong(11);
-					fu.writeString(eDir.getName());
+            if (PontoC.getTipo() == 11) {
 
-					long eInicio = fu.getPonteiro();
+                long ePastaPonteiro_Inicio = fu.getPonteiro();
 
-					fu.writeLong(0);
+                criarPasta(fu, PontoC.getNome());
 
-					long eFim = fu.getPonteiro();
+                long ePastaPonteiro_Fim = fu.getPonteiro();
 
-					fu.writeLong(0);
+                ePonteiroLocal = fu.getPonteiro();
 
-					mPontos.add(new Ponto(eDir.getAbsolutePath(), 11, eInicio, eFim));
+                fu.setPonteiro(PontoC.getInicio());
+                fu.writeLong(ePastaPonteiro_Inicio);
 
-				} else if (eDir.isFile()) {
+                fu.setPonteiro(PontoC.getFim());
+                fu.writeLong(ePastaPonteiro_Fim);
 
-					fu.writeLong(12);
-					fu.writeString(eDir.getName());
+            } else if (PontoC.getTipo() == 12) {
 
-					long eInicio = fu.getPonteiro();
+                long eAquivoPonteiro_Inicio = fu.getPonteiro();
 
-					fu.writeLong(0);
 
-					long eFim = fu.getPonteiro();
+                try {
 
-					fu.writeLong(0);
+                    RandomAccessFile mArquivando = new RandomAccessFile(new File(PontoC.getNome()), "r");
 
-					mPontos.add(new Ponto(eDir.getAbsolutePath(), 12, eInicio, eFim));
+                    long mAquivandoIndex = 0;
+                    long mAquivandoTamanho = mArquivando.length();
 
-				}
+                    mArquivando.seek(0);
 
-				// System.out.println(" ->> " + eDir.getName() + " :: "+ eDir.isDirectory());
-			}
-		}
+                    while (mAquivandoIndex < mAquivandoTamanho) {
 
-		fu.writeLong(13);
+                        fu.writeByte(mArquivando.readByte());
 
-		//System.out.println(" ALOCANDO : " + eLocal);
+                        mAquivandoIndex += 1;
+                    }
 
-		long ePonteiroLocal = fu.getPonteiro();
+                    mArquivando.close();
 
-		for (Ponto PontoC : mPontos) {
+                } catch (IOException e) {
 
-			System.out.println("\t -->> " + PontoC.getTipo() + " : " + PontoC.getNome().replace(eLocal+"\\", ""));
+                    e.printStackTrace();
+                }
 
-			fu.setPonteiro(ePonteiroLocal);
 
-			if (PontoC.getTipo() == 11) {
+                long eAquivoPonteiro_Fim = fu.getPonteiro();
 
-				long ePastaPonteiro_Inicio = fu.getPonteiro();
+                ePonteiroLocal = fu.getPonteiro();
 
-				criarPastaCompressed(fu, PontoC.getNome());
+                fu.setPonteiro(PontoC.getInicio());
+                fu.writeLong(eAquivoPonteiro_Inicio);
 
-				long ePastaPonteiro_Fim = fu.getPonteiro();
+                fu.setPonteiro(PontoC.getFim());
+                fu.writeLong(eAquivoPonteiro_Fim);
 
-				ePonteiroLocal = fu.getPonteiro();
+            }
 
-				fu.setPonteiro(PontoC.getInicio());
-				fu.writeLong(ePastaPonteiro_Inicio);
+            fu.setPonteiro(ePonteiroLocal);
 
-				fu.setPonteiro(PontoC.getFim());
-				fu.writeLong(ePastaPonteiro_Fim);
+        }
 
-			} else if (PontoC.getTipo() == 12) {
+    }
 
-				long eAquivoPonteiro_Inicio = fu.getPonteiro();
-				
-				
-				try {
 
-					RandomAccessFile mArquivando = new RandomAccessFile(new File(PontoC.getNome()), "r");
+    public void criarPastaCompressed(FileBinary fu, String eLocal) {
 
-					int mAquivandoIndex = 0;
-					int mAquivandoTamanho = (int)mArquivando.length();
-					
-					mArquivando.seek(0);
-				
-					byte[] mTemporario = new byte[(int)mAquivandoTamanho];
-					
-					while(mAquivandoIndex<mAquivandoTamanho) {
-						
-						mTemporario[mAquivandoIndex] = (mArquivando.readByte());
-						
-						mAquivandoIndex+=1;
-					}
-					
-					 try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-					      try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-					        gzipOutputStream.write(mTemporario);
-					      }
-					      
-					      byte[] mTemporario2=  byteArrayOutputStream.toByteArray();
-					      
-					      mAquivandoIndex=0;
-							mAquivandoTamanho=mTemporario2.length;
-							while(mAquivandoIndex<mAquivandoTamanho) {
-								
-								fu.writeByte(mTemporario2[mAquivandoIndex]);
-								mAquivandoIndex+=1;
-							}
-							
-							
-					    } catch(IOException e) {
-					      throw new RuntimeException("Failed to zip content", e);
-					    }
-					
-					 
-					
-					mArquivando.close();
-					
-					
-					
-					
-				} catch (IOException e) {
 
-					e.printStackTrace();
-				}
-				
-				
-				long eAquivoPonteiro_Fim = fu.getPonteiro();
+        File dir = new File(eLocal);
 
-				ePonteiroLocal = fu.getPonteiro();
+        ArrayList<Ponto> mPontos = new ArrayList<Ponto>();
 
-				fu.setPonteiro(PontoC.getInicio());
-				fu.writeLong(eAquivoPonteiro_Inicio);
+        if (dir.exists()) {
+            for (File eDir : dir.listFiles()) {
 
-				fu.setPonteiro(PontoC.getFim());
-				fu.writeLong(eAquivoPonteiro_Fim);
+                if (eDir.isDirectory()) {
 
-			}
+                    fu.writeLong(11);
+                    fu.writeString(eDir.getName());
 
-			fu.setPonteiro(ePonteiroLocal);
+                    long eInicio = fu.getPonteiro();
 
-		}
+                    fu.writeLong(0);
 
-	}
+                    long eFim = fu.getPonteiro();
 
-	  private  String getTempo() {
+                    fu.writeLong(0);
 
-	        Calendar c = Calendar.getInstance();
+                    mPontos.add(new Ponto(eDir.getAbsolutePath(), 11, eInicio, eFim));
 
-	        int dia = c.get(Calendar.DAY_OF_MONTH);
-	        int mes = c.get(Calendar.MONTH) + 1;
-	        int ano = c.get(Calendar.YEAR);
+                } else if (eDir.isFile()) {
 
-	        int hora = c.get(Calendar.HOUR);
-	        int minutos = c.get(Calendar.MINUTE);
-	        int segundos = c.get(Calendar.SECOND);
+                    fu.writeLong(12);
+                    fu.writeString(eDir.getName());
 
-	        return dia + "/" + mes + "/" + ano + " " + hora + ":" + minutos + ":" + segundos;
+                    long eInicio = fu.getPonteiro();
 
-	    }
-	
+                    fu.writeLong(0);
+
+                    long eFim = fu.getPonteiro();
+
+                    fu.writeLong(0);
+
+                    mPontos.add(new Ponto(eDir.getAbsolutePath(), 12, eInicio, eFim));
+
+                }
+
+                // System.out.println(" ->> " + eDir.getName() + " :: "+ eDir.isDirectory());
+            }
+        }
+
+        fu.writeLong(13);
+
+        //System.out.println(" ALOCANDO : " + eLocal);
+
+        long ePonteiroLocal = fu.getPonteiro();
+
+        for (Ponto PontoC : mPontos) {
+
+            System.out.println("\t -->> " + PontoC.getTipo() + " : " + PontoC.getNome().replace(eLocal + "\\", ""));
+
+            fu.setPonteiro(ePonteiroLocal);
+
+            if (PontoC.getTipo() == 11) {
+
+                long ePastaPonteiro_Inicio = fu.getPonteiro();
+
+                criarPastaCompressed(fu, PontoC.getNome());
+
+                long ePastaPonteiro_Fim = fu.getPonteiro();
+
+                ePonteiroLocal = fu.getPonteiro();
+
+                fu.setPonteiro(PontoC.getInicio());
+                fu.writeLong(ePastaPonteiro_Inicio);
+
+                fu.setPonteiro(PontoC.getFim());
+                fu.writeLong(ePastaPonteiro_Fim);
+
+            } else if (PontoC.getTipo() == 12) {
+
+                long eAquivoPonteiro_Inicio = fu.getPonteiro();
+
+
+                try {
+
+                    RandomAccessFile mArquivando = new RandomAccessFile(new File(PontoC.getNome()), "r");
+
+                    int mAquivandoIndex = 0;
+                    int mAquivandoTamanho = (int) mArquivando.length();
+
+                    mArquivando.seek(0);
+
+                    byte[] mTemporario = new byte[(int) mAquivandoTamanho];
+
+                    while (mAquivandoIndex < mAquivandoTamanho) {
+
+                        mTemporario[mAquivandoIndex] = (mArquivando.readByte());
+
+                        mAquivandoIndex += 1;
+                    }
+
+                    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+                        try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                            gzipOutputStream.write(mTemporario);
+                        }
+
+                        byte[] mTemporario2 = byteArrayOutputStream.toByteArray();
+
+                        mAquivandoIndex = 0;
+                        mAquivandoTamanho = mTemporario2.length;
+                        while (mAquivandoIndex < mAquivandoTamanho) {
+
+                            fu.writeByte(mTemporario2[mAquivandoIndex]);
+                            mAquivandoIndex += 1;
+                        }
+
+
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to zip content", e);
+                    }
+
+
+                    mArquivando.close();
+
+
+                } catch (IOException e) {
+
+                    e.printStackTrace();
+                }
+
+
+                long eAquivoPonteiro_Fim = fu.getPonteiro();
+
+                ePonteiroLocal = fu.getPonteiro();
+
+                fu.setPonteiro(PontoC.getInicio());
+                fu.writeLong(eAquivoPonteiro_Inicio);
+
+                fu.setPonteiro(PontoC.getFim());
+                fu.writeLong(eAquivoPonteiro_Fim);
+
+            }
+
+            fu.setPonteiro(ePonteiroLocal);
+
+        }
+
+    }
+
+    private String getTempo() {
+
+        Calendar c = Calendar.getInstance();
+
+        int dia = c.get(Calendar.DAY_OF_MONTH);
+        int mes = c.get(Calendar.MONTH) + 1;
+        int ano = c.get(Calendar.YEAR);
+
+        int hora = c.get(Calendar.HOUR);
+        int minutos = c.get(Calendar.MINUTE);
+        int segundos = c.get(Calendar.SECOND);
+
+        return dia + "/" + mes + "/" + ano + " " + hora + ":" + minutos + ":" + segundos;
+
+    }
+
 }
