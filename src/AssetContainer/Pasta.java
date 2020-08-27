@@ -13,14 +13,25 @@ public class Pasta {
 	private ArrayList<Arquivo> mArquivos;
 	private ArrayList<Pasta> mPastas;
 
+
+	private boolean mAbertoTodos;
+	private ArrayList<Arquivo> mArquivosTodos;
+	private ArrayList<Pasta> mPastasTodos;
+
 	public Pasta(AssetContainer eAssetContainer, Ponto ePonto) {
 
 		mAssetContainer = eAssetContainer;
 		mPonto = ePonto;
+
 		mAberto = false;
+		mAbertoTodos=false;
+
 		mArquivos = new ArrayList<Arquivo>();
 		mPastas = new ArrayList<Pasta>();
-		
+
+		mArquivosTodos = new ArrayList<Arquivo>();
+		mPastasTodos = new ArrayList<Pasta>();
+
 	}
 
 	public String getNome() {
@@ -240,5 +251,58 @@ public class Pasta {
 		
 		return i;
 	}
-	
+
+
+	public ArrayList<Arquivo> getArquivosTodos() {
+
+		if (!mAbertoTodos) {
+			abrirTodos();
+		}
+
+		return mArquivosTodos;
+
+	}
+
+	public ArrayList<Pasta> getPastasTodos() {
+
+		if (!mAbertoTodos) {
+			abrirTodos();
+		}
+
+		return mPastasTodos;
+
+	}
+
+	private void abrirTodos() {
+
+		mArquivosTodos.clear();
+		mPastasTodos.clear();
+
+		mAbertoTodos=true;
+
+		for(Arquivo ma : getArquivos()){
+			mArquivosTodos.add(ma);
+		}
+
+		for(Pasta ma : getPastas()){
+			mPastasTodos.add(ma);
+			abrirTodosInterno(ma);
+		}
+
+	}
+
+	private void abrirTodosInterno(Pasta ePasta){
+
+		for(Arquivo ma : ePasta.getArquivos()){
+			mArquivosTodos.add(ma);
+		}
+
+		for(Pasta ma : ePasta.getPastas()){
+			mPastasTodos.add(ma);
+			abrirTodosInterno(ma);
+		}
+
+	}
+
+
 }

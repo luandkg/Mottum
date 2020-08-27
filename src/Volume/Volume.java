@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 
+import Estruturas.Lista;
 import Tronarko.Tronarko;
 
 public class Volume {
@@ -281,7 +282,7 @@ public class Volume {
 			}
 
 		} else {
-			throw new RuntimeException("Nao existe espaço ...");
+			throw new RuntimeException("Nao existe espaï¿½o ...");
 		}
 
 		return mAlocado;
@@ -342,6 +343,8 @@ public class Volume {
 		return mContando;
 	}
 
+
+
 	public void mostrar_mapa() {
 
 		mFileBinary.seek(mMapaInicio);
@@ -369,6 +372,29 @@ public class Volume {
 		}
 
 		System.out.println("\n\t################################################");
+
+	}
+
+	public byte[] getMapa() {
+
+		mFileBinary.seek(mMapaInicio);
+
+		long mIndex = mMapaInicio;
+int mIndexMapa = 0;
+
+
+		byte[] mLista = new  byte[(int)mMapaTamanho];
+
+		while (mIndex < mMapaFim) {
+
+			mLista[mIndexMapa] = mFileBinary.readByte() ;
+
+			mIndex += 1;
+			mIndexMapa+=1;
+
+		}
+
+		return mLista;
 
 	}
 
@@ -446,6 +472,12 @@ public class Volume {
 	public void criarArquivo(String eNome) {
 
 		mRaiz.criarArquivo(eNome);
+
+	}
+
+	public void removerArquivo(String eNome) {
+
+		mRaiz.removerArquivo(eNome);
 
 	}
 

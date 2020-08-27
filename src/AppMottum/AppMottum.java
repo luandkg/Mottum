@@ -1,37 +1,123 @@
 package AppMottum;
 
 
+import IM.VisualizadorAN;
 import AssetContainer.ArquivoImagem;
 import AssetContainer.ArquivoTexto;
 import AssetContainer.AssetContainer;
 import AssetContainer.AssetCreator;
-import AssetContainer.AssetExtrum;
 import AssetContainer.Listador;
-import AssetContainer.Arquivo;
 import AssetContainer.Biblioteca;
+import AssetContainer.Arquivo;
+import AssetContainer.Pasta;
+import AssetContainer.PastaLink;
+import AssetContainer.ArquivoLink;
 
+import IM.VisualizadorIM;
+import LuanDKG.LuanDKG;
+import LuanDKG.Matriz;
+
+import Mottum.Utils.Imaginador;
+import Mottum.Utils.Local;
+import Mottum.Windows;
 import Volume.Volume;
 
 public class AppMottum {
 
+    // CENTRAL DE DESENVOLVIMENTO DE ALGORITMOS - LUAN FREITAS
+
     public static void main(String[] args) {
 
 
-        aAssetContainer();
+
+        // aAssetContainer();
+
+        aDKG();
+
         //aVolume();
 
+        //aGE();
 
-        //Windows mWindows = new Windows("Mottum", 1500, 1020);
+        // aIM();
 
-        //mWindows.setIconImage(Imaginador.CarregarStream(Local.Carregar("editor.png")));
+        //aAN();
 
-        //Alpha Alfador = new Alpha(mWindows);
-        //Alfador.setImagem(ActionAll.getImagem());
 
-        //mWindows.CriarCenarioAplicavel(Alfador);
+    }
 
-        // Thread mThread = new Thread(mWindows);
-        // mThread.start();
+    public static void aDKG() {
+
+
+        LuanDKG arq = new LuanDKG();
+
+        arq.Abrir("luan.dkg");
+
+
+        arq.UnicoPacote("Bloco").Identifique("Nome","Bloco Vermelho");
+        arq.UnicoPacote("Bloco").Identifique("Peso",3.60);
+
+        arq.UnicoPacote("Bloco").UnicaLista("Tags").UnicoItem("LUZ");
+        arq.UnicoPacote("Bloco").UnicaLista("Tags").UnicoItem("AGUA");
+
+        arq.UnicoPacote("Bloco").UnicoVetor("Posicao").limpar();
+        arq.UnicoPacote("Bloco").UnicoVetor("Posicao").adicionar("A","B");
+
+
+
+        Matriz m= arq.UnicoPacote("Bloco").UnicaMatriz("Matrix");
+        m.limpar();
+        m.adicionar("0","1","2");
+        m.adicionar("4","3","2");
+        m.adicionar("3","6","9");
+
+        arq.Salvar("luan.dkg");
+
+
+    }
+
+    public static void aGE() {
+
+        Windows mWindows = new Windows("Mottum", 1500, 1020);
+
+        mWindows.setIconImage(Imaginador.CarregarStream(Local.Carregar("editor.png")));
+
+        Alpha Alfador = new Alpha(mWindows);
+
+        mWindows.CriarCenarioAplicavel(Alfador);
+
+        Thread mThread = new Thread(mWindows);
+        mThread.start();
+
+    }
+
+    public static void aIM() {
+
+        Windows mWindows = new Windows("Mottum", 1500, 1020);
+
+        mWindows.setIconImage(Imaginador.CarregarStream(Local.Carregar("editor.png")));
+
+        VisualizadorIM VIM = new VisualizadorIM(mWindows);
+
+        mWindows.CriarCenarioAplicavel(VIM);
+
+        Thread mThread = new Thread(mWindows);
+        mThread.start();
+
+    }
+
+
+    public static void aAN() {
+
+        Windows mWindows = new Windows("Mottum", 1500, 1020);
+
+        mWindows.setIconImage(Imaginador.CarregarStream(Local.Carregar("editor.png")));
+
+        VisualizadorAN VAN = new VisualizadorAN(mWindows);
+
+        mWindows.CriarCenarioAplicavel(VAN);
+
+        Thread mThread = new Thread(mWindows);
+        mThread.start();
 
     }
 
@@ -46,7 +132,7 @@ public class AppMottum {
         AssetCreator mACreator = new AssetCreator();
 
 
-        //mACreator.criar(mArquivo, mLocal);
+        // mACreator.criar(mArquivo, mLocal);
         // mACreator.criarCompressed(mArquivoCompressed, mLocal);
 
         System.out.println("\n\n ------------------- ABRIR ------------------------ \n\n");
@@ -57,10 +143,10 @@ public class AppMottum {
         System.out.println(" Versao : " + mAC.getVersao());
         System.out.println(" Criado : " + mAC.getCriado());
         System.out.println(" Finalizado : " + mAC.getFinalizado());
-        System.out.println(" Tem Apendice : " + mAC.temApendice());
+        System.out.println(" Tem Extrum : " + mAC.temApendice());
 
         if (mAC.temApendice()) {
-            System.out.println(" Apendice Local : " + mAC.getApendiceLocal());
+            System.out.println(" Extrum Local : " + mAC.getExtrumPonteiro());
         }
 
         System.out.println(" Tamanho : " + mAC.getTamanho());
@@ -77,6 +163,19 @@ public class AppMottum {
         System.out.println(" -------------- TABELA DE PASTAS --------------- ");
         mAC.listarTabelaDePastas();
 
+        System.out.println(" -------------- TABELA DE ARQUIVOS LINK --------------- ");
+
+        mAC.listarTabelaDeArquivosLink();
+
+
+        System.out.println(" -------------- TABELA DE LISTADORES --------------- ");
+        mAC.listarTabelaDeListadores();
+
+        System.out.println(" -------------- TABELA DE BIBLIOTECAS --------------- ");
+
+        mAC.listarTabelaDeBibliotecas();
+
+
         ArquivoImagem imc = mAC.getArquivoImagem("imc.png");
 
         System.out.println(" imc Tamanho : " + imc.getTamanho());
@@ -89,55 +188,67 @@ public class AppMottum {
         System.out.println(" Fis Linhas : " + fis.getLinhas().size());
         System.out.println(" Fis Indexado : " + fis.getIndexado());
 
+        for (Listador aL : mAC.getListadores()) {
 
+            for (Arquivo aa : aL.getArquivos()) {
 
+                System.out.println("Arquivo do " + aL.getNome() + " :: -->> " + aa.getNome());
 
-        mAC.limparExtrum();
-
-        Listador mRunner = mAC.criarListador("Runner");
-        mRunner.adicionar("Gaia\\Run");
-        mRunner.adicionar("texto");
-
-        Biblioteca mGeral = mAC.criarBiblioteca("Geral");
-        mGeral.adicionar("\\");
-        mGeral.adicionarExtensao(".odg");
-        // mAC.listarTabelaDeArquivos();
-
-        mAC.salvarExtrum();
-
-
-        for (Listador eListador : mAC.getListadores()) {
-
-            System.out.println(" -->> Listador : " + eListador.getNome());
-
-            for (String eLocal : eListador.getLocais()) {
-                System.out.println("       - " + eLocal + " -->> " + mAC.existePastaCaminho(eLocal));
             }
 
-            for(Arquivo eArquivo : eListador.getArquivos()){
-                System.out.println("      ARQUIVO :: " + eArquivo.getNome());
-            }
 
         }
 
-        for (Biblioteca eListador : mAC.getBibliotecas()) {
+        for (ArquivoLink aL : mAC.getArquivosLink()) {
 
-            System.out.println(" -->> Biblioteca : " + eListador.getNome());
+            System.out.println("Arquivo Link do " + aL.getNome() + " :: -->> " + aL.getArquivo().getNome());
 
-            for (String eLocal : eListador.getLocais()) {
-                System.out.println("       - LOCAL :  " + eLocal + " -->> " + mAC.existePastaCaminho(eLocal));
-            }
-            for (String eLocal : eListador.getExtensoes()) {
-                System.out.println("       - EXT : " + eLocal );
-            }
+        }
 
-            for(Arquivo eArquivo : eListador.getArquivos()){
-                System.out.println("      ARQUIVO :: " + eArquivo.getNome());
-            }
+        for (PastaLink aL : mAC.getPastasLink()) {
+
+            System.out.println("Pasta Link do " + aL.getNome() + " :: -->> " + aL.getPasta().getNome());
+
+        }
+
+        int i = 0;
+
+        if (i == 0) {
+
+            mAC.limparExtrum();
+
+            Pasta eRun = mAC.getPasta("Gaia").getPasta("Run");
+            Pasta eTexto = mAC.getPasta("texto");
+
+            Listador mRunner = mAC.criarListador("Runner");
+            mRunner.adicionar(eRun);
+            mRunner.adicionar(eTexto);
+
+            Biblioteca mGeral = mAC.criarBiblioteca("Geral");
+            mGeral.adicionarExtensao(".odg");
+
+            Arquivo gcc = mAC.getPasta("Gaia").getPasta("Compiler").getArquivo("Compiler.java");
+
+            mAC.criarLinkArquivo("FIS.txt", mAC.getArquivo("fis.txt"));
+            mAC.criarLinkArquivo("COMPILER.java", gcc);
+
+            mAC.criarLinkPasta("AGaia", mAC.getPasta("Gaia"));
+
+            mAC.salvarExtrum();
 
         }
 
 
+        //Windows mWindows = new Windows("AC", 1500, 1020);
+
+        // mWindows.setIconImage(Imaginador.CarregarStream(Local.Carregar("editor.png")));
+
+        //VisualizadorAC Alfador = new VisualizadorAC(mWindows);
+
+        // mWindows.CriarCenarioAplicavel(Alfador);
+
+        // Thread mThread = new Thread(mWindows);
+        // mThread.start();
 
     }
 

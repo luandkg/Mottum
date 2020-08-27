@@ -12,11 +12,16 @@ public class AssetExtrum {
 
     private ArrayList<Listador> mListadores;
     private ArrayList<Biblioteca> mBibliotecas;
+    private ArrayList<ArquivoLink> mArquivosLink;
+    private ArrayList<PastaLink> mPastasLink;
 
     public AssetExtrum(AssetContainer eAssetContainer) {
 
         mAssetContainer = eAssetContainer;
         mIndexado = false;
+
+        mArquivosLink = new ArrayList<ArquivoLink>();
+        mPastasLink = new ArrayList<PastaLink>();
 
         mListadores = new ArrayList<Listador>();
         mBibliotecas = new ArrayList<Biblioteca>();
@@ -28,9 +33,13 @@ public class AssetExtrum {
         if (!mIndexado) {
             mIndexado = true;
 
-            mListadores.clear();
+            mArquivosLink.clear();
+            mPastasLink.clear();
 
-            System.out.println("Iniciar Leitura Extrum");
+            mListadores.clear();
+            mBibliotecas.clear();
+
+            //   System.out.println("Iniciar Leitura Extrum");
 
             try {
 
@@ -40,7 +49,7 @@ public class AssetExtrum {
 
                 if (mAssetContainer.temApendice()) {
 
-                    fu.setPonteiro(mAssetContainer.getApendiceLocal());
+                    fu.setPonteiro(mAssetContainer.getExtrumPonteiro());
 
 
                     byte b1 = fu.readByte();
@@ -48,14 +57,14 @@ public class AssetExtrum {
 
                     while (b1 != (byte) 55) {
 
-                        System.out.println("B1 : " + b1);
+                        // System.out.println("B1 : " + b1);
 
 
                         if (b1 == (byte) 51) {
 
                             Listador eListador = new Listador(mAssetContainer, fu.readString());
 
-                            System.out.println("Dentro Listador : " + eListador.getNome());
+                            //System.out.println("Dentro Listador : " + eListador.getNome());
 
                             b1 = fu.readByte();
 
@@ -64,10 +73,13 @@ public class AssetExtrum {
                             while (b1 != (byte) 13) {
 
                                 if (b1 == (byte) 11) {
-                                    String eLocal = fu.readStringGrande();
-                                    eListador.adicionar(eLocal);
 
-                                    System.out.println("\t - Local " + eLocal);
+                                    long eInicio = fu.readLong();
+                                    long eFim = fu.readLong();
+
+                                    eListador.adicionar(new Pasta(this.mAssetContainer, new Ponto(11, eInicio, eFim)));
+
+                                    //  System.out.println("\t - Local " + eLocal);
                                 }
                                 b1 = fu.readByte();
                                 if (b1 == (byte) -1) {
@@ -78,11 +90,12 @@ public class AssetExtrum {
 
                             mListadores.add(eListador);
 
+
                         } else if (b1 == (byte) 52) {
 
                             Biblioteca eListador = new Biblioteca(mAssetContainer, fu.readString());
 
-                            System.out.println("Dentro Biblioteca : " + eListador.getNome());
+                            // System.out.println("Dentro Biblioteca : " + eListador.getNome());
 
                             b1 = fu.readByte();
 
@@ -94,7 +107,7 @@ public class AssetExtrum {
                                     String eLocal = fu.readStringGrande();
                                     eListador.adicionar(eLocal);
 
-                                    System.out.println("\t - Local " + eLocal);
+                                    //  System.out.println("\t - Local " + eLocal);
                                 }
                                 b1 = fu.readByte();
                                 if (b1 == (byte) -1) {
@@ -112,7 +125,7 @@ public class AssetExtrum {
                                     String eLocal = fu.readString();
                                     eListador.adicionarExtensao(eLocal);
 
-                                    System.out.println("\t - Extensao " + eLocal);
+                                    //   System.out.println("\t - Extensao " + eLocal);
                                 }
                                 b1 = fu.readByte();
                                 if (b1 == (byte) -1) {
@@ -121,6 +134,19 @@ public class AssetExtrum {
                             }
 
                             mBibliotecas.add(eListador);
+
+                        } else if (b1 == (byte) 53) {
+
+                            ArquivoLink eArquivoLink = new ArquivoLink(mAssetContainer, fu.readString(),fu.readString(), fu.readLong(), fu.readLong());
+                            mArquivosLink.add(eArquivoLink);
+
+
+                        } else if (b1 == (byte) 54) {
+
+                            PastaLink eArquivoLink = new PastaLink(mAssetContainer, fu.readString(),fu.readString(), fu.readLong(), fu.readLong());
+                            mPastasLink.add(eArquivoLink);
+
+
                         }
 
                         b1 = fu.readByte();
@@ -148,6 +174,8 @@ public class AssetExtrum {
 
         mListadores.clear();
         mBibliotecas.clear();
+        mArquivosLink.clear();
+        mPastasLink.clear();
 
     }
 
@@ -183,6 +211,45 @@ public class AssetExtrum {
 
     }
 
+    public ArquivoLink criarLinkArquivo(String eNome, Arquivo eLocal) {
+
+
+        System.out.println(eLocal.getNome());
+
+        ler();
+
+        if (!existe(eNome)) {
+
+            System.out.println("A : " + eLocal.getNome());
+
+            ArquivoLink mArquivoLinkC = new ArquivoLink(mAssetContainer, eNome,eLocal.getNome(), eLocal.getInicio(), eLocal.getFim());
+            mArquivosLink.add(mArquivoLinkC);
+
+            return mArquivoLinkC;
+        } else {
+            throw new IllegalArgumentException("Ja existe um recurso com esse nome : " + eNome);
+        }
+
+    }
+
+    public PastaLink criarLinkPasta(String eNome, Pasta eLocal) {
+
+
+        ler();
+
+        if (!existe(eNome)) {
+
+
+            PastaLink mArquivoLinkC = new PastaLink(mAssetContainer, eNome,eLocal.getNome(), eLocal.getInicio(), eLocal.getFim());
+            mPastasLink.add(mArquivoLinkC);
+
+            return mArquivoLinkC;
+        } else {
+            throw new IllegalArgumentException("Ja existe um recurso com esse nome : " + eNome);
+        }
+
+    }
+
     public ArrayList<Listador> getListadores() {
         ler();
         return mListadores;
@@ -191,6 +258,16 @@ public class AssetExtrum {
     public ArrayList<Biblioteca> getBibliotecas() {
         ler();
         return mBibliotecas;
+    }
+
+    public ArrayList<ArquivoLink> getArquivosLink() {
+        ler();
+        return mArquivosLink;
+    }
+
+    public ArrayList<PastaLink> getPastasLink() {
+        ler();
+        return mPastasLink;
     }
 
     public boolean existe(String eNome) {
@@ -213,13 +290,19 @@ public class AssetExtrum {
             }
         }
 
+        for (ArquivoLink mListadorC : getArquivosLink()) {
+            if (mListadorC.getNome().contentEquals(eNome)) {
+                ret = true;
+                break;
+            }
+        }
+
         return ret;
 
     }
 
 
     public void salvar() {
-
 
 
         try {
@@ -230,7 +313,7 @@ public class AssetExtrum {
 
             if (mAssetContainer.temApendice()) {
 
-                fu.setPonteiro(mAssetContainer.getApendiceLocal());
+                fu.setPonteiro(mAssetContainer.getExtrumPonteiro());
 
                 fu.writeByte((byte) 50);
 
@@ -242,9 +325,10 @@ public class AssetExtrum {
 
                     fu.writeByte((byte) 10);
 
-                    for (String eLocal : mListadorC.getLocais()) {
+                    for (Pasta eLocal : mListadorC.getLocais()) {
                         fu.writeByte((byte) 11);
-                        fu.writeGrandeString(eLocal);
+                        fu.writeLong(eLocal.getInicio());
+                        fu.writeLong(eLocal.getFim());
                     }
 
                     fu.writeByte((byte) 13);
@@ -274,6 +358,42 @@ public class AssetExtrum {
                     }
 
                     fu.writeByte((byte) 13);
+
+                }
+
+                for (ArquivoLink mListadorC : getArquivosLink()) {
+
+                    //System.out.println("Criando Bib " + mListadorC.getNome() + " : " + mListadorC.getLocais().size() + " : " + mListadorC.getExtensoes().size());
+
+                    fu.writeByte((byte) 53);
+
+                    fu.writeString(mListadorC.getNome());
+                    fu.writeString(mListadorC.getArquivo().getNome());
+
+                    System.out.println("Criando Arquivo Link : " + mListadorC.getNome());
+
+
+                    fu.writeLong(mListadorC.getArquivo().getInicio());
+                    fu.writeLong(mListadorC.getArquivo().getFim());
+
+
+                }
+
+                for (PastaLink mListadorC : getPastasLink()) {
+
+                    //System.out.println("Criando Bib " + mListadorC.getNome() + " : " + mListadorC.getLocais().size() + " : " + mListadorC.getExtensoes().size());
+
+                    fu.writeByte((byte) 54);
+
+                    fu.writeString(mListadorC.getNome());
+                    fu.writeString(mListadorC.getPasta().getNome());
+
+                    System.out.println("Criando Pasta Link : " + mListadorC.getNome());
+
+
+                    fu.writeLong(mListadorC.getPasta().getInicio());
+                    fu.writeLong(mListadorC.getPasta().getFim());
+
 
                 }
 

@@ -5,376 +5,425 @@ import java.io.RandomAccessFile;
 
 public class FileBinary {
 
-	private RandomAccessFile mFile;
-	private String ALFABETO;
-	private int ALFABETO_MAX;
+    private RandomAccessFile mFile;
+    private String ALFABETO;
+    private int ALFABETO_MAX;
 
-	public FileBinary(RandomAccessFile eFile) {
+    public FileBinary(RandomAccessFile eFile) {
 
-		mFile = eFile;
+        mFile = eFile;
 
-		ALFABETO = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789 ()[]{}-.,<>//\\:;";
-		ALFABETO_MAX = ALFABETO.length();
+        ALFABETO = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789 ()[]{}-.,<>//\\:;";
+        ALFABETO_MAX = ALFABETO.length();
 
-	}
+    }
 
-	public byte getString(String l) {
+    public byte getString(String l) {
 
-		int procurando = 0;
-		boolean enc = false;
+        int procurando = 0;
+        boolean enc = false;
 
-		while (procurando < ALFABETO_MAX) {
+        while (procurando < ALFABETO_MAX) {
 
-			String pl = String.valueOf(ALFABETO.charAt(procurando));
-			if (pl.contentEquals(l)) {
-				enc = true;
-				break;
+            String pl = String.valueOf(ALFABETO.charAt(procurando));
+            if (pl.contentEquals(l)) {
+                enc = true;
+                break;
 
-			}
-			procurando += 1;
-		}
+            }
+            procurando += 1;
+        }
 
-		if (!enc) {
-			throw new IllegalArgumentException("Char nao encontrado : " + l);
-		}
+        if (!enc) {
+            throw new IllegalArgumentException("Char nao encontrado : " + l);
+        }
 
-		return (byte) (procurando + 1);
-	}
+        return (byte) (procurando + 1);
+    }
 
-	public String stringFromByte(Byte b) {
+    public String stringFromByte(Byte b) {
 
-		int procurando = 0;
-		int pb = ((int) b) - 1;
-		String ret = "";
+        int procurando = 0;
+        int pb = ((int) b) - 1;
+        String ret = "";
 
-		boolean enc = false;
+        boolean enc = false;
 
-		while (procurando < ALFABETO_MAX) {
+        while (procurando < ALFABETO_MAX) {
 
-			if (procurando == pb) {
-				ret = String.valueOf(ALFABETO.charAt(procurando));
-				enc = true;
-				break;
-			}
+            if (procurando == pb) {
+                ret = String.valueOf(ALFABETO.charAt(procurando));
+                enc = true;
+                break;
+            }
 
-			procurando += 1;
-		}
+            procurando += 1;
+        }
 
-		if (!enc) {
-			throw new IllegalArgumentException("Byte Char nao encontrado : " + pb);
-		}
+        if (!enc) {
+            throw new IllegalArgumentException("Byte Char nao encontrado : " + pb);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public byte[] stringToBytes(String s) {
-		byte[] result = new byte[100];
+    public byte[] stringToBytes(String s) {
+        byte[] result = new byte[100];
 
-		int tamanho = s.length();
+        int tamanho = s.length();
 
-		if (tamanho > 100) {
-			throw new IllegalArgumentException("String alem do limite : " + tamanho);
-		} else {
+        if (tamanho > 100) {
+            throw new IllegalArgumentException("String alem do limite : " + tamanho);
+        } else {
 
-			int procurando = 0;
+            int procurando = 0;
 
-			while (procurando < tamanho) {
+            while (procurando < tamanho) {
 
-				byte v = getString(String.valueOf(s.charAt(procurando)));
-				result[procurando] = v;
+                byte v = getString(String.valueOf(s.charAt(procurando)));
+                result[procurando] = v;
 
-				procurando += 1;
-			}
+                procurando += 1;
+            }
 
-		}
+        }
 
-		return result;
-	}
+        return result;
+    }
 
 
-	public byte[] stringGrandeToBytes(String s) {
-		byte[] result = new byte[1024];
+    public byte[] stringGrandeToBytes(String s) {
+        byte[] result = new byte[1024];
 
-		int tamanho = s.length();
+        int tamanho = s.length();
 
-		if (tamanho > 1024) {
-			throw new IllegalArgumentException("String alem do limite : " + tamanho);
-		} else {
+        if (tamanho > 1024) {
+            throw new IllegalArgumentException("String alem do limite : " + tamanho);
+        } else {
 
-			int procurando = 0;
+            int procurando = 0;
 
-			while (procurando < tamanho) {
+            while (procurando < tamanho) {
 
-				byte v = getString(String.valueOf(s.charAt(procurando)));
-				result[procurando] = v;
+                byte v = getString(String.valueOf(s.charAt(procurando)));
+                result[procurando] = v;
+
+                procurando += 1;
+            }
+
+        }
+
+        return result;
+    }
+
+    public byte[] longToBytes(long l) {
+        byte[] result = new byte[8];
+        for (int i = 7; i >= 0; i--) {
+            result[i] = (byte) (l & 0xFF);
+            l >>= 8;
+        }
+        return result;
+    }
+
+    public byte[] intToByte(int value) {
+        return new byte[]{
+                (byte) (value >>> 24),
+                (byte) (value >>> 16),
+                (byte) (value >>> 8),
+                (byte) value};
+    }
+
+    int bytestoInt(byte[] bytes) {
+        return ((bytes[0] & 0xFF) << 24) |
+                ((bytes[1] & 0xFF) << 16) |
+                ((bytes[2] & 0xFF) << 8) |
+                ((bytes[3] & 0xFF) << 0);
+    }
 
-				procurando += 1;
-			}
 
-		}
+    public long readLong() {
+        long result = 0;
+        try {
 
-		return result;
-	}
+            byte[] lendo = new byte[8];
+            for (int i = 0; i < 8; i++) {
+                lendo[i] = mFile.readByte();
+            }
+            for (int i = 0; i < 8; i++) {
+                result <<= Long.BYTES;
+                result |= (lendo[i] & 0xFF);
+            }
 
-	public byte[] longToBytes(long l) {
-		byte[] result = new byte[8];
-		for (int i = 7; i >= 0; i--) {
-			result[i] = (byte) (l & 0xFF);
-			l >>= 8;
-		}
-		return result;
-	}
+        } catch (IOException e) {
 
+        }
+        return result;
+    }
 
+    public int readInt() {
+        int i = 0;
+        try {
+            i = ((mFile.readByte() & 0xFF) << 24) |
+                    ((mFile.readByte() & 0xFF) << 16) |
+                    ((mFile.readByte() & 0xFF) << 8) |
+                    ((mFile.readByte() & 0xFF) << 0);
+        } catch (IOException e) {
 
-	public long readLong() {
-		long result = 0;
-		try {
+        }
+        return i;
+    }
 
-			byte[] lendo = new byte[8];
-			for (int i = 0; i < 8; i++) {
-				lendo[i] = mFile.readByte();
-			}
-			for (int i = 0; i < 8; i++) {
-				result <<= Long.BYTES;
-				result |= (lendo[i] & 0xFF);
-			}
 
-		} catch (IOException e) {
+    public String organizar(byte b) {
+        String si = String.valueOf(b);
 
-		}
-		return result;
-	}
+        if (si.length() == 1) {
+            si = "00" + si;
+        } else if (si.length() == 2) {
+            si = "0" + si;
+        }
 
-	public String organizar(byte b) {
-		String si = String.valueOf(b);
+        return si;
+    }
 
-		if (si.length() == 1) {
-			si = "00" + si;
-		} else if (si.length() == 2) {
-			si = "0" + si;
-		}
+    public void dump() {
 
-		return si;
-	}
-	
-	public void dump() {
+        try {
 
-		try {
+            long tamanho = mFile.length();
+            long index = 0;
+            int cur = 0;
+            int max = 30;
 
-			long tamanho = mFile.length();
-			long index = 0;
-			int cur = 0;
-			int max = 30;
+            mFile.seek(0);
 
-			mFile.seek(0);
+            while (index < tamanho) {
+                System.out.print(organizar(mFile.readByte()) + " ");
+                index += 1;
+                cur += 1;
+                if (cur >= max) {
+                    cur = 0;
+                    System.out.print("\n");
+                }
+            }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-			while (index < tamanho) {
-				System.out.print(organizar(mFile.readByte()) + " ");
-				index += 1;
-				cur += 1;
-				if (cur >= max) {
-					cur = 0;
-					System.out.print("\n");
-				}
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    }
 
-	}
+    public void limpar() {
 
-	public void limpar() {
+        try {
 
-		try {
+            long tamanho = mFile.length();
+            long index = 0;
 
-			long tamanho = mFile.length();
-			long index = 0;
+            mFile.seek(0);
 
-			mFile.seek(0);
+            while (index < tamanho) {
+                mFile.write(0);
+                index += 1;
 
-			while (index < tamanho) {
-				mFile.write(0);
-				index += 1;
+            }
+        } catch (IOException e) {
 
-			}
-		} catch (IOException e) {
+        }
 
-		}
+    }
 
-	}
+    public void writeInt(int l) {
 
-	public void writeLong(long l) {
+        try {
+            mFile.write(intToByte(l));
+        } catch (IOException e) {
 
-		try {
-			mFile.write(longToBytes(l));
-		} catch (IOException e) {
+        }
 
-		}
+    }
 
-	}
 
-	public void writeString(String s) {
+    public void writeLong(long l) {
 
-		try {
-			mFile.write(stringToBytes(s));
-		} catch (IOException e) {
+        try {
+            mFile.write(longToBytes(l));
+        } catch (IOException e) {
 
-		}
+        }
 
-	}
+    }
 
-	public void writeGrandeString(String s) {
+    public void writeString(String s) {
 
-		try {
-			mFile.write(stringGrandeToBytes(s));
-		} catch (IOException e) {
+        try {
+            mFile.write(stringToBytes(s));
+        } catch (IOException e) {
 
-		}
+        }
 
-	}
+    }
 
-	public long getLength() {
-		try {
-			return mFile.length();
-		} catch (IOException e) {
-			return -1;
-		}
-	}
+    public void writeGrandeString(String s) {
 
-	public String readString() {
+        try {
+            mFile.write(stringGrandeToBytes(s));
+        } catch (IOException e) {
 
-		String ret = "";
-		byte[] result = new byte[100];
+        }
 
-		try {
+    }
 
-			long tamanho = mFile.length();
-			long index = mFile.getFilePointer();
+    public long getLength() {
+        try {
+            return mFile.length();
+        } catch (IOException e) {
+            return -1;
+        }
+    }
 
-			int cur = 0;
-			int max = 100;
+    public String readString() {
 
-			while (index < tamanho) {
+        String ret = "";
+        byte[] result = new byte[100];
 
-				if (cur < max) {
+        try {
 
-					result[cur] = mFile.readByte();
+            long tamanho = mFile.length();
+            long index = mFile.getFilePointer();
 
-				} else {
-					break;
-				}
+            int cur = 0;
+            int max = 100;
 
-				// System.out.println("Cur : " + cur + " -->> " + result[cur]);
+            while (index < tamanho) {
 
-				index += 1;
-				cur += 1;
+                if (cur < max) {
 
-			}
-		} catch (IOException e) {
+                    result[cur] = mFile.readByte();
 
-		}
+                } else {
+                    break;
+                }
 
-		int eIndex = 0;
-		while (eIndex < 100) {
-			byte i = result[eIndex];
-			// System.out.println("Passando : " + i);
-			if (i == 0) {
-				break;
-			} else {
-				ret += stringFromByte(i);
-			}
-			eIndex += 1;
-		}
+                // System.out.println("Cur : " + cur + " -->> " + result[cur]);
 
-		return ret;
-	}
+                index += 1;
+                cur += 1;
 
-	public String readStringGrande() {
+            }
+        } catch (IOException e) {
 
-		String ret = "";
-		byte[] result = new byte[1024];
+        }
 
-		try {
+        int eIndex = 0;
+        while (eIndex < 100) {
+            byte i = result[eIndex];
+            // System.out.println("Passando : " + i);
+            if (i == 0) {
+                break;
+            } else {
+                ret += stringFromByte(i);
+            }
+            eIndex += 1;
+        }
 
-			long tamanho = mFile.length();
-			long index = mFile.getFilePointer();
+        return ret;
+    }
 
-			int cur = 0;
-			int max = 1024;
+    public String readStringGrande() {
 
-			while (index < tamanho) {
+        String ret = "";
+        byte[] result = new byte[1024];
 
-				if (cur < max) {
+        try {
 
-					result[cur] = mFile.readByte();
+            long tamanho = mFile.length();
+            long index = mFile.getFilePointer();
 
-				} else {
-					break;
-				}
+            int cur = 0;
+            int max = 1024;
 
-				// System.out.println("Cur : " + cur + " -->> " + result[cur]);
+            while (index < tamanho) {
 
-				index += 1;
-				cur += 1;
+                if (cur < max) {
 
-			}
-		} catch (IOException e) {
+                    result[cur] = mFile.readByte();
 
-		}
+                } else {
+                    break;
+                }
 
-		int eIndex = 0;
-		while (eIndex < 1024) {
-			byte i = result[eIndex];
-			// System.out.println("Passando : " + i);
-			if (i == 0) {
-				break;
-			} else {
-				ret += stringFromByte(i);
-			}
-			eIndex += 1;
-		}
+                // System.out.println("Cur : " + cur + " -->> " + result[cur]);
 
-		return ret;
-	}
+                index += 1;
+                cur += 1;
 
-	public void inicio() {
-		try {
-			mFile.seek(0);
-		} catch (IOException e) {
+            }
+        } catch (IOException e) {
 
-		}
-	}
+        }
 
-	public byte readByte() {
-		try {
-			return mFile.readByte();
-		} catch (IOException e) {
-			return -1;
-		}
-	}
+        int eIndex = 0;
+        while (eIndex < 1024) {
+            byte i = result[eIndex];
+            // System.out.println("Passando : " + i);
+            if (i == 0) {
+                break;
+            } else {
+                ret += stringFromByte(i);
+            }
+            eIndex += 1;
+        }
 
-	public void writeByte(Byte eByte) {
-		try {
-			 mFile.writeByte(eByte);
-		} catch (IOException e) {
-			
-		}
-	}
-	
-	public long getPonteiro() {
-		try {
-			return mFile.getFilePointer();
-		} catch (IOException e) {
-			return -1;
-		}
-	}
+        return ret;
+    }
 
-	public void setPonteiro(long p) {
-		try {
-			 mFile.seek(p);
-		} catch (IOException e) {
-		}
-	}
+    public void inicio() {
+        try {
+            mFile.seek(0);
+        } catch (IOException e) {
+
+        }
+    }
+
+    public byte readByte() {
+        try {
+            return mFile.readByte();
+        } catch (IOException e) {
+            return -1;
+        }
+    }
+
+    public void writeByte(Byte eByte) {
+        try {
+            mFile.writeByte(eByte);
+        } catch (IOException e) {
+
+        }
+    }
+
+    public long getPonteiro() {
+        try {
+            return mFile.getFilePointer();
+        } catch (IOException e) {
+            return -1;
+        }
+    }
+
+    public void setPonteiro(long p) {
+        try {
+            mFile.seek(p);
+        } catch (IOException e) {
+        }
+    }
+
+    public int organizarByteInt(byte b){
+
+        if (b>=0){
+            return (int) b;
+        }else{
+            return 256+(int) b;
+        }
+
+    }
 }

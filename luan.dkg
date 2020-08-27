@@ -1,0 +1,12 @@
+PACOTE Bloco
+ {
+   ID Nome = "Bloco Vermelho"
+   ID Peso = "3.6"
+   LISTA Tags { LUZ AGUA } 
+   VETOR Posicao {    "A"   "B"   }
+   MATRIZ Matrix { 
+      {    "0"    "1"    "2"    }
+      {    "4"    "3"    "2"    }
+      {    "3"    "6"    "9"    }
+   }
+ } 

@@ -15,8 +15,8 @@ public class AssetContainer {
     private String mVersao;
     private String mCriado;
     private String mFinalizado;
-    private byte mApendice;
-    private long mApendicePonteiro;
+    private byte mExtrumExiste;
+    private long mExtrumPonteiro;
 
     private String mArquivo;
     private boolean mAberto;
@@ -31,8 +31,8 @@ public class AssetContainer {
         mVersao = "";
         mCriado = "";
         mFinalizado = "";
-        mApendice = (byte) 0;
-        mApendicePonteiro = 0;
+        mExtrumExiste = (byte) 0;
+        mExtrumPonteiro = 0;
 
         mAberto = false;
 
@@ -88,8 +88,8 @@ public class AssetContainer {
             mCriado = fu.readString();
             mFinalizado = fu.readString();
 
-            mApendice = fu.readByte();
-            mApendicePonteiro = fu.readLong();
+            mExtrumExiste = fu.readByte();
+            mExtrumPonteiro = fu.readLong();
 
             int v = 0;
 
@@ -298,6 +298,34 @@ public class AssetContainer {
 
     }
 
+    public ArrayList<Arquivo> getTabelaDeArquivos() {
+
+        ArrayList<Arquivo> mTabelaDeArquivos = new ArrayList<Arquivo>();
+        mTabelaDeArquivos.addAll(this.getArquivos());
+
+        for (Pasta mPasta : this.getPastas()) {
+            getTabelaDeArquivo("", mTabelaDeArquivos, mPasta);
+        }
+
+        return mTabelaDeArquivos;
+    }
+
+    public void getTabelaDeArquivo(String eAntes, ArrayList<Arquivo> mTabelaDeArquivos, Pasta mDebugPastas) {
+
+
+        for (Arquivo mArquivo : mDebugPastas.getArquivos()) {
+            mArquivo.setNomeCompleto(eAntes + mDebugPastas.getNome() + "/" + mArquivo.getNome());
+            mTabelaDeArquivos.add(mArquivo);
+        }
+        for (Pasta mPasta : mDebugPastas.getPastas()) {
+
+            getTabelaDeArquivo(eAntes + mPasta.getNome() + "/", mTabelaDeArquivos, mPasta);
+
+        }
+
+
+    }
+
     public Pasta getPastaCaminho(String eLocal) {
 
         for (Pasta mPasta : getTabelaDePastas()) {
@@ -316,6 +344,28 @@ public class AssetContainer {
 
         return null;
     }
+
+    public Arquivo getArquivoCaminho(String eLocal) {
+
+        ArrayList<Arquivo> mTodosArquivos = getTabelaDeArquivos();
+
+        for (Arquivo mArquivo : mTodosArquivos) {
+            if (mArquivo.getNomeCompleto().contentEquals(eLocal)) {
+                return mArquivo;
+            }
+        }
+
+        eLocal = eLocal.replace("\\", "/");
+
+        for (Arquivo mArquivo : mTodosArquivos) {
+            if (mArquivo.getNomeCompleto().contentEquals(eLocal)) {
+                return mArquivo;
+            }
+        }
+
+        return null;
+    }
+
 
     public boolean existePastaCaminho(String eLocal) {
 
@@ -412,7 +462,7 @@ public class AssetContainer {
 
     public boolean temApendice() {
 
-        if (mApendice == (byte) 1) {
+        if (mExtrumExiste == (byte) 1) {
             return true;
         } else {
             return false;
@@ -420,15 +470,33 @@ public class AssetContainer {
 
     }
 
-    public long getApendiceLocal() {
-        return mApendicePonteiro;
+    public long getExtrumPonteiro() {
+        return mExtrumPonteiro;
     }
 
     public Listador criarListador(String eNome) {
-     return   mAssetExtrum.criarListador(eNome);
+        return mAssetExtrum.criarListador(eNome);
     }
+
+    public ArquivoLink criarLinkArquivo(String eNome,Arquivo eLocal) {
+        return mAssetExtrum.criarLinkArquivo(eNome,eLocal);
+    }
+
+
+    public PastaLink criarLinkPasta(String eNome,Pasta eLocal) {
+        return mAssetExtrum.criarLinkPasta(eNome,eLocal);
+    }
+
     public Biblioteca criarBiblioteca(String eNome) {
         return mAssetExtrum.criarBiblioteca(eNome);
+    }
+
+    public ArrayList<ArquivoLink> getArquivosLink() {
+        return mAssetExtrum.getArquivosLink();
+    }
+
+    public ArrayList<PastaLink> getPastasLink() {
+        return mAssetExtrum.getPastasLink();
     }
 
     public ArrayList<Listador> getListadores() {
@@ -439,12 +507,54 @@ public class AssetContainer {
         return mAssetExtrum.getBibliotecas();
     }
 
-    public void salvarExtrum(){
+    public void salvarExtrum() {
         mAssetExtrum.salvar();
     }
 
-    public void limparExtrum(){
+    public void limparExtrum() {
         mAssetExtrum.limpar();
+    }
+
+    public void listarTabelaDeListadores() {
+
+
+        for (Listador mListador : getListadores()) {
+
+            System.out.println(" -->> " + mListador.getNome()+ " :: " + mListador.getArquivos().size());
+            for (Pasta eLocal : mListador.getLocais()) {
+                System.out.println("\t - LOCAL : " + eLocal.getNome());
+            }
+
+        }
+
+    }
+
+    public void listarTabelaDeArquivosLink() {
+
+
+        for (ArquivoLink mListador : getArquivosLink()) {
+
+            System.out.println(" -->> " + mListador.getNome()+ " :: " + mListador.getArquivo().getInicio() + " - " + mListador.getArquivo().getFim());
+
+
+        }
+
+    }
+
+    public void listarTabelaDeBibliotecas() {
+
+
+        for (Biblioteca mListador : getBibliotecas()) {
+
+            System.out.println(" -->> " + mListador.getNome() + " :: " + mListador.getArquivos().size());
+            for (String eLocal : mListador.getLocais()) {
+                System.out.println("\t - LOCAL : " + eLocal);
+            }
+            for (String eExtensao : mListador.getExtensoes()) {
+                System.out.println("\t - EXTENSAO : " + eExtensao);
+            }
+        }
+
     }
 
 }

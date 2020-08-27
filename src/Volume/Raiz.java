@@ -165,8 +165,25 @@ public class Raiz {
 		System.out.println(" ----------------------------------------");
 
 	}
-	
-	public void expandirmuito() {
+
+	public void removerArquivo(String eNome) {
+
+		for(Arquivo mArquivo : getArquivos()){
+
+			if (mArquivo.getNome().contentEquals(eNome)){
+				mArquivo.limpar();
+
+
+
+				break;
+			}
+
+		}
+
+	}
+
+
+		public void expandirmuito() {
 	
 		mSuperBloco.expandir();
 		//mSuperBloco.debug();

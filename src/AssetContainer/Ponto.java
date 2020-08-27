@@ -17,7 +17,18 @@ public class Ponto {
 		mFim=eFim;
 
 	}
-	
+
+	public Ponto(long eTipo,long eInicio,long eFim) {
+
+		mNome="";
+
+		mTipo=eTipo;
+		mInicio=eInicio;
+		mFim=eFim;
+
+	}
+
+
 	public String getNome() {return mNome;}
 	public long getTipo() {return mTipo;}
 	public long getInicio() {return mInicio;}
