@@ -1,4 +1,4 @@
-package IM;
+package VisulizadorMultimidia;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -13,7 +13,12 @@ import Mottum.Cenarios.Cena;
 import Mottum.UI.BotaoCor;
 import Mottum.UI.Clicavel;
 import Mottum.Utils.Escritor;
-
+import Multimidia.Chunk;
+import Multimidia.Cor;
+import Multimidia.Im.IM;
+import Multimidia.Im.IMChunker;
+import Multimidia.Quad;
+import Multimidia.Utils;
 
 import javax.imageio.ImageIO;
 
@@ -24,16 +29,18 @@ public class VisualizadorIM extends Cena {
 
     private Escritor TextoGrande;
 
-    BotaoCor BTN_CRIAR;
-    BotaoCor BTN_REMOVER;
-    BotaoCor BTN_PROCESSO;
+    private BotaoCor BTN_CRIAR;
+    private BotaoCor BTN_ABRIR;
 
-    Clicavel mClicavel;
+    private BotaoCor BTN_PROCESSO;
 
-    String eArquivoAbrir = "imagem4.png";
-    String eArquivoIM = "imagem.im";
+    private Clicavel mClicavel;
 
-    BufferedImage imagem = null;
+    private String eArquivoAbrir = "imagem3.png";
+    private String eArquivoIM = "imagem.im";
+
+    private BufferedImage imagem;
+    private boolean mTemImagem;
 
     private int mParte = 0;
 
@@ -46,6 +53,7 @@ public class VisualizadorIM extends Cena {
     boolean aberto;
     private int mProcessandoMaximo;
 
+    private Lista<Chunk> mChunks;
 
     public VisualizadorIM(Windows eWindows) {
         mWindows = eWindows;
@@ -55,7 +63,7 @@ public class VisualizadorIM extends Cena {
         mClicavel = new Clicavel();
 
         BTN_CRIAR = new BotaoCor(300, 50, 100, 100, new Color(26, 188, 156));
-        BTN_REMOVER = new BotaoCor(450, 50, 100, 100, new Color(26, 188, 156));
+        BTN_ABRIR = new BotaoCor(450, 50, 100, 100, new Color(200, 200, 50));
         BTN_PROCESSO = new BotaoCor(600, 50, 100, 100, new Color(70, 40, 156));
 
         salvo = false;
@@ -64,6 +72,10 @@ public class VisualizadorIM extends Cena {
         mIM = new IM();
         mUtils = new Utils();
 
+        mTemImagem = false;
+        imagem = null;
+
+        mChunks = new Lista<Chunk>();
 
         try {
 
@@ -71,7 +83,8 @@ public class VisualizadorIM extends Cena {
 
             //toEscalaDeCinza(imagem);
 
-            // mIM.salvar(imagem, eArquivoIM);
+            //  mIM.salvarAntigo(imagem, eArquivoIM);
+            mIM.salvar(imagem, eArquivoIM);
 
 
         } catch (IOException e) {
@@ -95,7 +108,6 @@ public class VisualizadorIM extends Cena {
 
         mClicavel.update(dt, mWindows.getMouse().Pressed());
 
-
         if (mClicavel.getClicado()) {
 
             int px = (int) mWindows.getMouse().x;
@@ -105,7 +117,7 @@ public class VisualizadorIM extends Cena {
             if (BTN_CRIAR.getClicado(px, py)) {
 
 
-                System.out.println("Criar");
+                System.out.println(" -->> Salvar IM");
 
 
                 mIM.salvar(imagem, eArquivoIM);
@@ -113,14 +125,22 @@ public class VisualizadorIM extends Cena {
                 salvo = true;
 
 
-            } else if (BTN_REMOVER.getClicado(px, py)) {
+            } else if (BTN_ABRIR.getClicado(px, py)) {
 
                 mProcessando = false;
                 mProcessandoID = 0;
                 mProcessandoID = -1;
 
+                System.out.println(" -->> Abrir IM");
 
                 mIM.abrir(eArquivoIM);
+
+                IMChunker eIMChunker = new IMChunker();
+
+                mChunks.limpar();
+
+                eIMChunker.abrir(eArquivoIM);
+                mChunks = eIMChunker.getChunks();
 
                 System.out.println("Largura : " + mIM.getLargura());
                 System.out.println("Altura : " + mIM.getAltura());
@@ -128,22 +148,12 @@ public class VisualizadorIM extends Cena {
                 System.out.println("Gamas : " + mIM.getImagemGamas());
                 System.out.println("Processos : " + mIM.getImagemProcessos());
 
-                for (int xmeio = 0; xmeio < mIM.getLargura(); xmeio++) {
-                    for (int ymeio = 0; ymeio < mIM.getAltura(); ymeio++) {
-
-
-                        // Cor aCor = mIM.getPixel(xmeio,ymeio);
-                        //aCor = aCor.aumentar(100,-100,40);
-
-                        //mIM.setPixel(xmeio,ymeio,aCor);
-                    }
-                }
-
 
                 imagem = mIM.getImagem();
-
+                mTemImagem = true;
 
                 mProcessandoMaximo = mIM.getImagemProcessos();
+                mProcessandoID = 0;
 
                 aberto = false;
 
@@ -163,6 +173,21 @@ public class VisualizadorIM extends Cena {
         } else {
 
             //mRect.setTamanho(100, 100);
+        }
+
+    }
+
+    public void alterar() {
+
+        for (int xmeio = 0; xmeio < mIM.getLargura(); xmeio++) {
+            for (int ymeio = 0; ymeio < mIM.getAltura(); ymeio++) {
+
+
+                // Cor aCor = mIM.getPixel(xmeio,ymeio);
+                //aCor = aCor.aumentar(100,-100,40);
+
+                //mIM.setPixel(xmeio,ymeio,aCor);
+            }
         }
 
     }
@@ -192,72 +217,120 @@ public class VisualizadorIM extends Cena {
 
         mWindows.Limpar(g);
         BTN_CRIAR.draw(g);
-        BTN_REMOVER.draw(g);
+        BTN_ABRIR.draw(g);
         BTN_PROCESSO.draw(g);
 
         g.setColor(Color.RED);
 
         TextoGrande.EscreveNegrito(g, "Visualizador IM", 20, 80);
 
-        g.drawImage(imagem, 200, 200, imagem.getWidth(), imagem.getHeight(), null);
+        if (mTemImagem) {
+            g.drawImage(imagem, 200, 200, imagem.getWidth(), imagem.getHeight(), null);
 
 
-        int w = imagem.getWidth();
-        int h = imagem.getHeight();
+            int w = imagem.getWidth();
+            int h = imagem.getHeight();
 
-        IM mIM = new IM();
-
-
-        Quad mBloco = mUtils.getBloco(w, h, mParte);
+            IM mIM = new IM();
 
 
-        //TextoGrande.EscreveNegrito(g, "IMAGEM { " + w + ":" + h + " } -->> " + mBlocosN, 800, 100);
+            Quad mBloco = mUtils.getBloco(w, h, mParte);
 
 
-        int modo = mUtils.getModo(mBloco.getLargura(), mBloco.getAltura());
+            //TextoGrande.EscreveNegrito(g, "IMAGEM { " + w + ":" + h + " } -->> " + mBlocosN, 800, 100);
 
 
-        // TextoGrande.EscreveNegrito(g, "BLOCO " + mParte + " -->> " + mBloco.getX() + ":" + mBloco.getY() + "{" + mBloco.getLargura() + ":" + mBloco.getAltura() + "} -->> " + modo, 800, 200);
+            int modo = mUtils.getModo(mBloco.getLargura(), mBloco.getAltura());
 
-        boolean mPaletavel = mUtils.isPaletavel(imagem);
 
-        if (mPaletavel) {
+            // TextoGrande.EscreveNegrito(g, "BLOCO " + mParte + " -->> " + mBloco.getX() + ":" + mBloco.getY() + "{" + mBloco.getLargura() + ":" + mBloco.getAltura() + "} -->> " + modo, 800, 200);
 
-            int mCores = mUtils.getPaletaMin(imagem);
+            boolean mPaletavel = mUtils.isPaletavel(imagem);
 
-            // TextoGrande.EscreveNegrito(g, "PALETAVEL : SIM ", 900, 300);
-            //TextoGrande.EscreveNegrito(g, "PALETA " + mCores, 900, 400);
+            if (mPaletavel) {
 
-            Lista<Cor> lsCores = mUtils.getPaleta(imagem);
-            Iterador<Cor> mIterador = new Iterador<Cor>(lsCores);
-            int it = 0;
-            for (mIterador.iniciar(); mIterador.continuar(); mIterador.proximo()) {
-                // System.out.println("Cor : " + it + " -->> " + mIterador.getValor().toString());
-                it += 1;
+                int mCores = mUtils.getPaletaMin(imagem);
+
+                // TextoGrande.EscreveNegrito(g, "PALETAVEL : SIM ", 900, 300);
+                //TextoGrande.EscreveNegrito(g, "PALETA " + mCores, 900, 400);
+
+                Lista<Cor> lsCores = mUtils.getPaleta(imagem);
+                Iterador<Cor> mIterador = new Iterador<Cor>(lsCores);
+                int it = 0;
+                for (mIterador.iniciar(); mIterador.continuar(); mIterador.proximo()) {
+                    // System.out.println("Cor : " + it + " -->> " + mIterador.getValor().toString());
+                    it += 1;
+                }
+
+            } else {
+
+
+                // TextoGrande.EscreveNegrito(g, "PALETAVEL : NAO ", 900, 300);
+
             }
 
-        } else {
+            int mX = 900;
+            int mY = 200;
+
+            int mQuad = 10;
+            int mi = 0;
+            int mimax = 60;
+
+            Iterador<Chunk> mIteradorChunk = new Iterador<Chunk>(mChunks);
+
+            for (mIteradorChunk.iniciar(); mIteradorChunk.continuar(); mIteradorChunk.proximo()) {
+
+                Chunk eChunk = mIteradorChunk.getValor();
+
+                Color eCor = Color.BLACK;
+
+                if (eChunk == Chunk.PALETA) {
+                    eCor = Color.YELLOW;
+                } else if (eChunk == Chunk.BLOCO_UM) {
+                    eCor = Color.GREEN;
+                } else if (eChunk == Chunk.BLOCO_NORMAL) {
+                    eCor = Color.RED;
+                } else if (eChunk == Chunk.BLOCO_PALETAVEL) {
+                    eCor = Color.ORANGE;
+
+                } else if (eChunk == Chunk.PALETAVEL_UM) {
+                    eCor = new Color(150, 80, 140);
+                } else if (eChunk == Chunk.PALETAVEL_NORMAL) {
+                    eCor = new Color(150, 120, 140);
+
+                } else if (eChunk == Chunk.GAMA_UM) {
+                    eCor = new Color(10, 120, 140);
+                } else if (eChunk == Chunk.GAMA_NORMAL) {
+                    eCor = new Color(10, 60, 120);
+                }
+
+                g.setColor(eCor);
+
+                g.fillRect(mX + (mi * mQuad), mY, mQuad - 2, mQuad - 2);
+                mi += 1;
+                if (mi > mimax) {
+                    mi = 0;
+                    mY += mQuad;
+                }
+            }
 
 
-            // TextoGrande.EscreveNegrito(g, "PALETAVEL : NAO ", 900, 300);
+            if (salvo) {
+
+                draw_salvos(g);
+
+            }
+
+            if (aberto) {
+
+                draw_abertos(g);
+
+            }
+
 
         }
-
-
-        if (salvo) {
-
-            draw_salvos(g);
-
-        }
-
-        if (aberto) {
-
-            draw_abertos(g);
-
-        }
-
-
     }
+
 
     public void draw_bloco(Graphics g) {
 

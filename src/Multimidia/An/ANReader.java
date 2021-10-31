@@ -16,6 +16,7 @@ public class ANReader {
     private int mImagemLargura;
     private int mImagemAltura;
     private int mChrono;
+    private SetoresLer mSetoresLer;
 
     private Lista<BufferedImage> mImagens;
 
@@ -24,7 +25,8 @@ public class ANReader {
         mIM = new IM();
         mUtils = new Utils();
         mImagens = new Lista<BufferedImage>();
-        mChrono=0;
+        mChrono = 0;
+        mSetoresLer = new SetoresLer();
 
     }
 
@@ -33,7 +35,7 @@ public class ANReader {
         mImagens.limpar();
         mImagemLargura = 0;
         mImagemAltura = 0;
-        mChrono=0;
+        mChrono = 0;
 
         try {
             RandomAccessFile raf = new RandomAccessFile(new File(eArquivo), "r");
@@ -58,7 +60,7 @@ public class ANReader {
 
             System.out.println("Tamanho : " + w + " :: " + h);
 
-            mChrono= fu.readInt();
+            mChrono = fu.readInt();
             System.out.println("Chrono : " + mChrono);
 
 
@@ -90,14 +92,14 @@ public class ANReader {
 
                 if (mTipoBloco == Constantes.PALETA) {
 
-                    mPaletaDaImagem = mIMReader.lerPaleta(fu);
+                    mPaletaDaImagem = mSetoresLer.lerPaleta(fu);
 
                 } else if (mTipoBloco == Constantes.CHRONO_INICIO) {
 
                     System.out.println("Ler Quadro : " + mQuadroID);
                     lerChrono(fu, (int) w, (int) h, mPaletaDaImagem);
 
-                    mQuadroID+=1;
+                    mQuadroID += 1;
                 }
 
 
@@ -108,8 +110,7 @@ public class ANReader {
 
             System.out.println("Imagem IM - TERMINADO");
 
-        } catch (
-                IOException e) {
+        } catch ( IOException e) {
 
             e.printStackTrace();
         }
@@ -140,40 +141,49 @@ public class ANReader {
 
             if (mTipoBloco == Constantes.CINZENTO_UM) {
 
-                mIMReader.lerCinzentoUm(fu);
+                mSetoresLer.lerCinzentoUm(fu,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.CINZENTO_NORMAL) {
 
-                mIMReader.lerCinzentoNormal(fu);
+                mSetoresLer.lerCinzentoNormal(fu,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.GAMA_UM) {
 
-                mIMReader.lerGamaUm(fu);
+                mSetoresLer.lerGamaUm(fu, mImagemLargura, mImagemAltura, mIMReader.getGamaGeral(), mIMReader.getImagem());
+                mIMReader.aumentarGamaGeral();
 
             } else if (mTipoBloco == Constantes.GAMA_NORMAL) {
 
-                mIMReader.lerGamaNormal(fu);
+                mSetoresLer.lerGamaNormal(fu, mImagemLargura, mImagemAltura, mIMReader.getGamaGeral(), mIMReader.getImagem());
+                mIMReader.aumentarGamaGeral();
 
 
             } else if (mTipoBloco == Constantes.PALETAVEL_UM) {
 
-                mIMReader.lerPaletavelUm(fu, mPaletaDaImagem);
+                mSetoresLer.lerPaletavelUm(fu, mPaletaDaImagem,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.PALETAVEL_NORMAL) {
 
-                mIMReader.lerPaletavelNormal(fu, mPaletaDaImagem);
+                mSetoresLer.lerPaletavelNormal(fu, mPaletaDaImagem,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.BLOCO_UM) {
 
-                mIMReader.lerBlocoUm(fu);
+                mSetoresLer.lerBlocoUm(fu,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.BLOCO_PALETAVEL) {
 
-                mIMReader.lerBlocoPaletavel(fu);
+                mSetoresLer.lerBlocoPaletavel(fu,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.BLOCO_NORMAL) {
 
-                mIMReader.lerBlocoNormal(fu);
+                mSetoresLer.lerBlocoNormal(fu,mImagemLargura, mImagemAltura, mIMReader.getBlocoGeral(), mIMReader.getImagem());
+                mIMReader.aumentarBlocoGeral();
 
             } else if (mTipoBloco == Constantes.CHRONO_FIM) {
                 break;

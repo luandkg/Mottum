@@ -1,15 +1,8 @@
 package IM;
 
-import AssetContainer.FileBinary;
-import Estruturas.Iterador;
 import Estruturas.Lista;
-import IM.Cor;
-import IM.Utils;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 
 public class AN {
 

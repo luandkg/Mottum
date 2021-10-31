@@ -1,6 +1,5 @@
 package IM;
 
-import AssetContainer.FileBinary;
 import Estruturas.Iterador;
 import Estruturas.Lista;
 
@@ -13,11 +12,13 @@ public class ANWriter {
 
     private IM mIM;
     private Utils mUtils;
+    private SetoresEscrever mSetoresEscrever;
 
     public ANWriter() {
 
         mIM = new IM();
         mUtils = new Utils();
+        mSetoresEscrever = new SetoresEscrever();
 
     }
 
@@ -49,7 +50,7 @@ public class ANWriter {
 
                 RandomAccessFile raf = new RandomAccessFile(new File(eArquivo), "rw");
 
-                FileBinary fu = new FileBinary(raf);
+                BinaryUtils fu = new BinaryUtils(raf);
 
                 fu.writeByte((byte) 65);
                 fu.writeByte((byte) 78);
@@ -98,7 +99,7 @@ public class ANWriter {
 
                             fu.writeByte((byte) Constantes.CHRONO_INICIO);
 
-                            escreverQuadroCinzento(fu, mIterador.getValor(), w, h, mBlocosN, mGamas,mIMWriter);
+                            escreverQuadroCinzento(fu, mIterador.getValor(), w, h, mBlocosN, mGamas);
 
                             fu.writeByte((byte) Constantes.CHRONO_FIM);
 
@@ -113,7 +114,7 @@ public class ANWriter {
                         fu.writeByte((byte) Constantes.IMAGEM_PALETAVEL);
 
 
-                        mIMWriter.escreverPaletavel(fu, mPaleta);
+                        mSetoresEscrever.escreverPaletavel(fu, mPaleta);
 
 
                         for (mIterador.iniciar(); mIterador.continuar(); mIterador.proximo()) {
@@ -122,13 +123,12 @@ public class ANWriter {
 
                             fu.writeByte((byte) Constantes.CHRONO_INICIO);
 
-                            escreverQuadroPaletavel(fu, mIterador.getValor(), w, h, mBlocosN, mGamas,mIMWriter,mPaleta);
+                            escreverQuadroPaletavel(fu, mIterador.getValor(), w, h, mBlocosN, mGamas, mIMWriter, mPaleta);
 
                             fu.writeByte((byte) Constantes.CHRONO_FIM);
 
 
                         }
-
 
 
                     }
@@ -145,7 +145,7 @@ public class ANWriter {
 
                         fu.writeByte((byte) Constantes.CHRONO_INICIO);
 
-                        escreverQuadro(fu, mIterador.getValor(), w, h, mBlocosN, mGamas,mIMWriter);
+                        escreverQuadro(fu, mIterador.getValor(), w, h, mBlocosN, mGamas, mIMWriter);
 
                         fu.writeByte((byte) Constantes.CHRONO_FIM);
 
@@ -177,9 +177,7 @@ public class ANWriter {
     }
 
 
-
-    private void escreverQuadro(FileBinary fu, BufferedImage imagem, int w, int h, int mBlocosN, int mGamas, IMWriter mIMWriter ) {
-
+    private void escreverQuadro(BinaryUtils fu, BufferedImage imagem, int w, int h, int mBlocosN, int mGamas, IMWriter mIMWriter) {
 
 
         for (int mBlocoID = 0; mBlocoID < mBlocosN; mBlocoID++) {
@@ -190,7 +188,7 @@ public class ANWriter {
             int mModo = mUtils.getModo(movendoBloco.getLargura(), movendoBloco.getAltura());
 
 
-            BlocoIM mBlocoIM = mIMWriter.mapearBloco(imagem, movendoBloco);
+            BlocoIM mBlocoIM = mSetoresEscrever.mapearBloco(imagem, movendoBloco);
 
 
             int mTipo = mBlocoIM.getTipo();
@@ -199,15 +197,15 @@ public class ANWriter {
             if (mBlocoIM.getTipo() == 1) {
 
 
-                mIMWriter.escreverBlocoUm(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
+                mSetoresEscrever.escreverBlocoUm(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
 
             } else if (mBlocoIM.getTipo() == 10) {
 
-                mIMWriter.escreverBlocoComPaleta(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
+                mSetoresEscrever.escreverBlocoComPaleta(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
 
             } else {
 
-                mIMWriter.escreverBlocoNormal(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
+                mSetoresEscrever.escreverBlocoNormal(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
 
             }
 
@@ -218,30 +216,21 @@ public class ANWriter {
             Quad movendoGama = mUtils.getGama(w, h, mGamaID);
             int mModo = mUtils.getAlphaModo(movendoGama.getLargura(), movendoGama.getAltura());
 
-            BlocoIM mBlocoIM = mIMWriter.mapearGama(imagem, movendoGama);
-
+            BlocoIM mBlocoIM = mSetoresEscrever.mapearGama(imagem, movendoGama);
 
             int mTipo = mBlocoIM.getTipoAlpha();
-            //System.out.println("Tipo Alfa : " + mTipo);
 
             if (mTipo == 1) {
-
-
-                mIMWriter.escreverGamaUm(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
-
-
+                mSetoresEscrever.escreverGamaUm(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
             } else {
-
-                mIMWriter.escreverGamaNormal(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
-
+                mSetoresEscrever.escreverGamaNormal(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
             }
 
         }
 
     }
 
-    private void escreverQuadroPaletavel(FileBinary fu, BufferedImage imagem, int w, int h, int mBlocosN, int mGamas, IMWriter mIMWriter, Lista<Cor> mPaleta ) {
-
+    private void escreverQuadroPaletavel(BinaryUtils fu, BufferedImage imagem, int w, int h, int mBlocosN, int mGamas, IMWriter mIMWriter, Lista<Cor> mPaleta) {
 
 
         for (int mBlocoID = 0; mBlocoID < mBlocosN; mBlocoID++) {
@@ -252,21 +241,16 @@ public class ANWriter {
             int mModo = mUtils.getModo(movendoBloco.getLargura(), movendoBloco.getAltura());
 
 
-            BlocoIM mBlocoIM = mIMWriter.mapearBloco(imagem, movendoBloco);
+            BlocoIM mBlocoIM = mSetoresEscrever.mapearBloco(imagem, movendoBloco);
 
 
             int mTipo = mBlocoIM.getTipo();
 
 
             if (mBlocoIM.getTipo() == 1) {
-
-
-                mIMWriter.escreverPaletavelUm(fu, mPaleta,mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
-
+                mSetoresEscrever.escreverPaletavelUm(fu, mPaleta, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
             } else {
-
-                mIMWriter.escreverPaletavelNormal(fu, mPaleta,mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
-
+                mSetoresEscrever.escreverPaletavelNormal(fu, mPaleta, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
             }
 
         }
@@ -276,30 +260,23 @@ public class ANWriter {
             Quad movendoGama = mUtils.getGama(w, h, mGamaID);
             int mModo = mUtils.getAlphaModo(movendoGama.getLargura(), movendoGama.getAltura());
 
-            BlocoIM mBlocoIM = mIMWriter.mapearGama(imagem, movendoGama);
+            BlocoIM mBlocoIM = mSetoresEscrever.mapearGama(imagem, movendoGama);
 
 
             int mTipo = mBlocoIM.getTipoAlpha();
             //System.out.println("Tipo Alfa : " + mTipo);
 
             if (mTipo == 1) {
-
-
-                mIMWriter.escreverGamaUm(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
-
-
+                mSetoresEscrever.escreverGamaUm(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
             } else {
-
-                mIMWriter.escreverGamaNormal(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
-
+                mSetoresEscrever.escreverGamaNormal(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
             }
 
         }
 
     }
 
-    private void escreverQuadroCinzento(FileBinary fu, BufferedImage imagem, int w, int h, int mBlocosN, int mGamas, IMWriter mIMWriter ) {
-
+    private void escreverQuadroCinzento(BinaryUtils fu, BufferedImage imagem, int w, int h, int mBlocosN, int mGamas ) {
 
 
         for (int mBlocoID = 0; mBlocoID < mBlocosN; mBlocoID++) {
@@ -310,7 +287,7 @@ public class ANWriter {
             int mModo = mUtils.getModo(movendoBloco.getLargura(), movendoBloco.getAltura());
 
 
-            BlocoIM mBlocoIM = mIMWriter.mapearBloco(imagem, movendoBloco);
+            BlocoIM mBlocoIM = mSetoresEscrever.mapearBloco(imagem, movendoBloco);
 
 
             int mTipo = mBlocoIM.getTipo();
@@ -319,11 +296,11 @@ public class ANWriter {
             if (mBlocoIM.getTipo() == 1) {
 
 
-                mIMWriter.escreverCinzentoUm(fu,mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
+                mSetoresEscrever.escreverCinzentoUm(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
 
             } else {
 
-                mIMWriter.escreverCinzentoNormal(fu,mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
+                mSetoresEscrever.escreverCinzentoNormal(fu, mBlocoID, movendoBloco, mBlocoIM, mTipo, mModo);
 
             }
 
@@ -334,21 +311,16 @@ public class ANWriter {
             Quad movendoGama = mUtils.getGama(w, h, mGamaID);
             int mModo = mUtils.getAlphaModo(movendoGama.getLargura(), movendoGama.getAltura());
 
-            BlocoIM mBlocoIM = mIMWriter.mapearGama(imagem, movendoGama);
+            BlocoIM mBlocoIM = mSetoresEscrever.mapearGama(imagem, movendoGama);
 
 
             int mTipo = mBlocoIM.getTipoAlpha();
             //System.out.println("Tipo Alfa : " + mTipo);
 
             if (mTipo == 1) {
-
-
-                mIMWriter.escreverGamaUm(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
-
-
+                mSetoresEscrever.escreverGamaUm(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
             } else {
-
-                mIMWriter.escreverGamaNormal(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
+                mSetoresEscrever.escreverGamaNormal(fu, mGamaID, movendoGama, mBlocoIM, mTipo, mModo);
 
             }
 

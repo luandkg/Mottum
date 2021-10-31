@@ -3,8 +3,6 @@ package IM;
 import Estruturas.Iterador;
 import Estruturas.Lista;
 
-import java.awt.image.BufferedImage;
-
 public class BlocoIM {
 
     private Lista<Cor> mPaleta;

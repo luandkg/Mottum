@@ -1,6 +1,5 @@
 package IM;
 
-import Estruturas.Iterador;
 import Estruturas.Lista;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -45,6 +44,15 @@ public class IM {
 
 
     }
+
+    public void salvarAntigo(BufferedImage imagem, String eArquivo) {
+
+        IMWriter mEscritor = new IMWriter();
+        mEscritor.salvarAntigo(imagem, eArquivo);
+
+
+    }
+
 
     public BufferedImage getCopia(BufferedImage eOriginal) {
 
